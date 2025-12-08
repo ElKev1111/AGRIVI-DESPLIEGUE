@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<h:head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Registro - AgriviApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+          rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+    <style>
+        :root {
+            --agrivi-navy: #4F5E8C;
+            --agrivi-green: #17A649;
+            --agrivi-dark-green: #16592E;
+            --agrivi-cream: #F2EFDF;
+            --agrivi-sand: #D9A273;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--agrivi-cream), #d7f0ff);
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .register-container {
+            background: white;
+            border-radius: 1rem;
+            padding: 2.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .page-title i {
+            color: var(--agrivi-green);
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            color: #ef4444;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            border-left: 4px solid #ef4444;
+        }
+
+        .alert-success {
+            background-color: #d1fae5;
+            color: var(--agrivi-green);
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            border-left: 4px solid var(--agrivi-green);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--agrivi-navy);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group label i {
+            color: var(--agrivi-green);
+            margin-right: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.75rem;
+            background: var(--agrivi-cream);
+            color: #1f2937;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--agrivi-green);
+            box-shadow: 0 0 0 3px rgba(23, 166, 73, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--agrivi-green) 0%, var(--agrivi-dark-green) 100%);
+            color: white;
+            border: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(23, 166, 73, 0.3);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(23, 166, 73, 0.4);
+        }
+
+        .login-link {
+            margin-top: 1.5rem;
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .login-link a {
+            color: var(--agrivi-green);
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .login-link a:hover {
+            color: var(--agrivi-dark-green);
+            text-decoration: underline;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .register-container {
+                padding: 1.5rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</h:head>
+
+<h:body>
+
+    <div class="register-container">
+        <h2 class="page-title">
+            <i class="bi bi-person-plus-fill"></i>
+            Registro de Usuario
+        </h2>
+
+        <!-- Mensajes de validación -->
+        <h:messages globalOnly="true" layout="table"
+                    styleClass="messages-container"
+                    errorClass="alert-error"
+                    infoClass="alert-success"
+                    warnClass="alert-error"
+                    fatalClass="alert-error"/>
+
+        <h:form>
+
+            <div class="form-grid">
+                <!-- Nombre -->
+                <div class="form-group">
+                    <label for="nombre">
+                        <i class="bi bi-person-fill"></i>
+                        Nombre
+                    </label>
+                    <h:inputText id="nombre" 
+                                 value="#{usuarioBean.usuario.nombre}" 
+                                 required="true"
+                                 styleClass="form-input"/>
+                </div>
+
+                <!-- Celular -->
+                <div class="form-group">
+                    <label for="celular">
+                        <i class="bi bi-telephone-fill"></i>
+                        Celular
+                    </label>
+                    <h:inputText id="celular" 
+                                 value="#{usuarioBean.usuario.celular}" 
+                                 required="true"
+                                 styleClass="form-input"/>
+                </div>
+            </div>
+
+            <!-- Correo -->
+            <div class="form-group">
+                <label for="correo">
+                    <i class="bi bi-envelope-fill"></i>
+                    Correo
+                </label>
+                <h:inputText id="correo" 
+                             value="#{usuarioBean.usuario.correo}" 
+                             required="true"
+                             styleClass="form-input"/>
+            </div>
+
+            <!-- Dirección -->
+            <div class="form-group">
+                <label for="direccion">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    Dirección
+                </label>
+                <h:inputText id="direccion" 
+                             value="#{usuarioBean.usuario.direccion}" 
+                             required="true"
+                             styleClass="form-input"/>
+            </div>
+
+            <!-- Contraseña -->
+            <div class="form-group">
+                <label for="password">
+                    <i class="bi bi-lock-fill"></i>
+                    Contraseña
+                </label>
+                <h:inputSecret id="password" 
+                               value="#{usuarioBean.usuario.password}" 
+                               required="true"
+                               styleClass="form-input"/>
+            </div>
+
+            <!-- Botón -->
+            <div class="form-group">
+                <h:commandButton value="Registrarse"
+                                 action="#{usuarioBean.agregar()}"
+                                 styleClass="btn-primary">
+                    <i class="bi bi-check-circle-fill"></i>
+                </h:commandButton>
+            </div>
+        </h:form>
+
+        <p class="login-link">
+            ¿Ya tienes cuenta?
+            <h:link outcome="login" value="Inicia Sesión"/>
+        </p>
+    </div>
+
+</h:body>
+</html>

@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <h:head>
+        <title>403 - Acceso Denegado | AgriviApp</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+        <style>
+            body {
+                font-family: 'Inter', sans-serif;
+                background: linear-gradient(135deg, #f8fdf9 0%, #e6f5ed 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .error-container {
+                text-align: center;
+                padding: 2rem;
+                max-width: 600px;
+            }
+            .error-number {
+                font-size: 8rem;
+                font-weight: 800;
+                color: #ea580c;
+                line-height: 1;
+                margin-bottom: 1rem;
+                text-shadow: 4px 4px 8px rgba(234, 88, 12, 0.2);
+            }
+            .logo-container {
+                margin-bottom: 2rem;
+                animation: float 3s ease-in-out infinite;
+            }
+            .logo-img {
+                width: 120px;
+                height: auto;
+                margin: 0 auto;
+            }
+            @keyframes float {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+            }
+            .lock-icon {
+                color: #ea580c;
+                font-size: 3rem;
+                margin-bottom: 1rem;
+                animation: swing 2s ease-in-out infinite;
+            }
+            @keyframes swing {
+                0%, 100% { transform: rotate(0deg); }
+                25% { transform: rotate(-10deg); }
+                75% { transform: rotate(10deg); }
+            }
+            .btn-home {
+                background-color: #0b9446;
+                color: white;
+                padding: 0.875rem 2rem;
+                border-radius: 0.5rem;
+                font-weight: 600;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 14px rgba(11, 148, 70, 0.3);
+            }
+            .btn-home:hover {
+                background-color: #097a3a;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(11, 148, 70, 0.4);
+            }
+            .btn-login {
+                background-color: #ea580c;
+                color: white;
+                padding: 0.875rem 2rem;
+                border-radius: 0.5rem;
+                font-weight: 600;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3);
+                margin-left: 0.75rem;
+            }
+            .btn-login:hover {
+                background-color: #c2410c;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4);
+            }
+            .status-badge {
+                display: inline-block;
+                background-color: #ffedd5;
+                color: #9a3412;
+                padding: 0.5rem 1rem;
+                border-radius: 9999px;
+                font-size: 0.875rem;
+                font-weight: 600;
+                margin-bottom: 1.5rem;
+            }
+            .decorative-leaves {
+                position: fixed;
+                opacity: 0.08;
+                pointer-events: none;
+            }
+            .leaf-1 {
+                top: 10%;
+                left: 10%;
+                font-size: 4rem;
+                color: #ea580c;
+            }
+            .leaf-2 {
+                bottom: 15%;
+                right: 15%;
+                font-size: 5rem;
+                color: #c2410c;
+            }
+        </style>
+    </h:head>
+
+    <h:body>
+        <!-- Elementos decorativos de fondo -->
+        <div class="decorative-leaves leaf-1">
+            <i class="fas fa-lock"></i>
+        </div>
+        <div class="decorative-leaves leaf-2">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+
+        <div class="error-container">
+            <!-- Logo de AgriviApp -->
+            <div class="logo-container">
+                <img src="#{resource['images/agrivi-logo.png']}" alt="AgriviApp Logo" class="logo-img"/>
+            </div>
+
+            <!-- Badge de estado -->
+            <div class="status-badge">
+                <i class="fas fa-ban"></i> Acceso Denegado
+            </div>
+
+            <!-- Icono decorativo -->
+            <div class="lock-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+
+            <!-- Número de error -->
+            <h1 class="error-number">403</h1>
+
+            <!-- Mensaje principal -->
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">
+                Acceso Restringido
+            </h2>
+
+            <!-- Descripción -->
+            <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+                Lo sentimos, no tienes los permisos necesarios para acceder a esta página. 
+                Esta área está restringida a usuarios autorizados.
+            </p>
+
+            <!-- Información adicional -->
+            <div class="bg-orange-50 border-l-4 border-orange-400 p-4 mb-8 text-left rounded">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-info-circle text-orange-400 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-orange-700">
+                            <strong>Posibles razones:</strong><br/>
+                            • No has iniciado sesión<br/>
+                            • Tu cuenta no tiene los permisos necesarios<br/>
+                            • Estás intentando acceder a un área administrativa
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="flex flex-wrap justify-center gap-3">
+                <h:link outcome="/dashboardPresentacion.xhtml" styleClass="btn-home">
+                    <i class="fas fa-home"></i>
+                    Volver al Inicio
+                </h:link>
+                
+                <h:link outcome="/login.xhtml" styleClass="btn-login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Iniciar Sesión
+                </h:link>
+            </div>
+
+            <!-- Ayuda adicional -->
+            <div class="mt-10 pt-6 border-t border-gray-200">
+                <p class="text-sm text-gray-500 mb-3">
+                    ¿Crees que esto es un error?
+                </p>
+                <p class="text-sm text-gray-600">
+                    Contacta a nuestro equipo de soporte en 
+                    <a href="mailto:info@agriviapp.com" class="text-green-700 hover:underline font-medium">
+                        info@agriviapp.com
+                    </a>
+                </p>
+            </div>
+        </div>
+    </h:body>
+</html>

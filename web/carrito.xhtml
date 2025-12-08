@@ -1,0 +1,754 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+    <h:head>
+        <title>AgriviApp - Carrito de Compras</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+
+        <style>
+            :root {
+                --agrivi-navy: #4F5E8C;
+                --agrivi-green: #17A649;
+                --agrivi-dark-green: #16592E;
+                --agrivi-cream: #F2EFDF;
+                --agrivi-sand: #D9A273;
+            }
+
+            html, body {
+                height: 100%;
+                margin: 0;
+            }
+            body {
+                font-family: 'Inter', sans-serif;
+                background: linear-gradient(135deg, var(--agrivi-cream), #d7f0ff);
+                display: flex;
+                flex-direction: column;
+            }
+            .page-wrapper {
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            main {
+                flex: 1 0 auto;
+            }
+            footer {
+                flex-shrink: 0;
+            }
+
+            .header {
+                background: linear-gradient(90deg, var(--agrivi-dark-green), var(--agrivi-navy));
+            }
+            .nav-link {
+                color: #ffffff;
+                padding: 0.5rem 1rem;
+                border-radius: 9999px;
+                transition: background-color 0.2s, box-shadow 0.2s;
+                font-size: 0.85rem;
+            }
+            .nav-link:hover {
+                background-color: rgba(255, 255, 255, 0.16);
+                box-shadow: 0 0 0 1px rgba(255,255,255,0.35);
+            }
+            .cart-pill {
+                background: rgba(255,255,255,0.18);
+                padding: 0.35rem 0.9rem;
+                border-radius: 9999px;
+                display: flex;
+                align-items: center;
+                gap: 0.35rem;
+            }
+            .cart-count {
+                background-color: #ffffff;
+                color: var(--agrivi-dark-green);
+                border-radius: 9999px;
+                min-width: 22px;
+                height: 22px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.7rem;
+                font-weight: 700;
+            }
+            .btn-primary {
+                background-color: var(--agrivi-green);
+                color: white;
+                transition: background-color 0.2s ease-in-out, transform 0.1s;
+            }
+            .btn-primary:hover {
+                background-color: var(--agrivi-dark-green);
+                transform: translateY(-1px);
+            }
+            .btn-secondary {
+                background-color: #ffffff;
+                color: var(--agrivi-dark-green);
+                border: 1px solid var(--agrivi-sand);
+                transition: all 0.2s ease-in-out;
+            }
+            .btn-secondary:hover {
+                background-color: var(--agrivi-cream);
+            }
+            .card {
+                background-color: #ffffff;
+                border-radius: 1rem;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+            }
+            .table-header {
+                background: linear-gradient(90deg, var(--agrivi-dark-green), var(--agrivi-green));
+            }
+
+            .qty-control {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.4rem;
+                background-color: var(--agrivi-cream);
+                border-radius: 9999px;
+                padding: 0.15rem 0.6rem;
+                border: 1px solid rgba(0,0,0,0.06);
+            }
+            .qty-number {
+                min-width: 2rem;
+                text-align: center;
+                font-weight: 600;
+                color: var(--agrivi-dark-green);
+            }
+            .qty-btn {
+                width: 1.6rem;
+                height: 1.6rem;
+                border-radius: 9999px;
+                font-size: 0.9rem;
+                border: none;
+                background-color: #ffffff;
+                color: var(--agrivi-dark-green);
+                box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+            }
+            .qty-btn:hover {
+                background-color: var(--agrivi-sand);
+                color: #ffffff;
+            }
+            .qty-btn:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+                background-color: #f3f4f6;
+                color: #9ca3af;
+            }
+            .footer {
+                background: linear-gradient(90deg, var(--agrivi-dark-green), var(--agrivi-navy));
+                box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.35);
+                margin-top: 3rem;
+            }
+
+            .footer h3,
+            .footer h4 {
+                font-weight: 700;
+            }
+
+            .footer p,
+            .footer li {
+                font-size: 0.85rem;
+            }
+
+            .footer a {
+                opacity: 0.85;
+                transition: opacity 0.2s ease, transform 0.15s ease;
+            }
+
+            .footer a:hover {
+                opacity: 1;
+                transform: translateY(-1px);
+            }
+
+        </style>
+    </h:head>
+
+    <h:body>
+        <div class="page-wrapper">
+            <!-- Protegemos la vista: solo cliente autenticado -->
+            <f:metadata>
+                <f:viewAction action="#{usuarioBean.verificarSesionCliente}" onPostback="false" />
+            </f:metadata>
+
+            <!-- HEADER -->
+            <header class="header text-white p-4 shadow-md">
+                <div class="container mx-auto flex justify-between items-center">
+                    <h1 class="text-2xl font-bold tracking-tight">AgriviApp</h1>
+                    <h:form id="navForm">
+                        <nav>
+                            <ul class="flex space-x-4 items-center text-xs">
+                                <li>
+                                    <h:link outcome="perfilCliente"
+                                            value="Perfil"
+                                            styleClass="nav-link" />
+                                </li>
+                                <li>
+                                    <h:commandLink value="Catálogo"
+                                                   action="dashboardCliente?faces-redirect=true"
+                                                   styleClass="nav-link" />
+                                </li>
+                                <li>
+                                    <h:link outcome="carrito" styleClass="nav-link">
+                                        <span class="cart-pill">
+                                            <i class="pi pi-shopping-cart text-sm"></i>
+                                            <span>Mi Carrito</span>
+                                            <span class="cart-count">
+                                                <h:outputText value="#{carritoBean.totalItems}" />
+                                            </span>
+                                        </span>
+                                    </h:link>
+                                </li>
+                                <li>
+                                    <span class="nav-link font-semibold opacity-90">
+                                        Hola, #{usuarioBean.usuario.nombre}
+                                    </span>
+                                </li>
+                                <li>
+                                    <p:commandLink value="Cerrar Sesión"
+                                                   action="#{usuarioBean.logout}"
+                                                   styleClass="nav-link"
+                                                   ajax="false" />
+                                </li>
+                            </ul>
+                        </nav>
+                    </h:form>
+                </div>
+            </header>
+
+            <!-- CONTENIDO PRINCIPAL -->
+            <main class="container mx-auto p-6 md:p-10">
+                <h:messages id="messages"
+                            globalOnly="true"
+                            infoStyle="color: #15803d; font-weight: bold; margin-bottom:1rem;"
+                            warnStyle="color: #b45309; font-weight: bold; margin-bottom:1rem;"
+                            errorStyle="color: #b91c1c; font-weight: bold; margin-bottom:1rem;" />
+
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+                    Mi Carrito de Compras
+                </h2>
+
+                <h:form id="carritoForm">
+
+                    <!-- Carrito vacío -->
+                    <h:panelGroup rendered="#{carritoBean.vacio}">
+                        <div class="card text-center py-10 px-6">
+                            <p class="text-lg text-gray-600 mb-4">
+                                Tu carrito está vacío.
+                            </p>
+                            <h:link outcome="dashboardCliente"
+                                    value="Volver al catálogo"
+                                    styleClass="btn-primary inline-block py-2 px-6 rounded-full font-medium text-white" />
+                        </div>
+                    </h:panelGroup>
+
+                    <!-- Carrito con items -->
+                    <h:panelGroup rendered="#{not carritoBean.vacio}">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Tabla de items -->
+                            <div class="lg:col-span-2">
+                                <div class="card overflow-hidden">
+                                    <div class="table-responsive">
+                                        <table class="min-w-full">
+                                            <thead class="table-header text-white text-xs uppercase tracking-wide">
+                                                <tr>
+                                                    <th class="px-4 py-3 text-left">Producto</th>
+                                                    <th class="px-4 py-3 text-right">Precio Unitario</th>
+                                                    <th class="px-4 py-3 text-center">Cantidad</th>
+                                                    <th class="px-4 py-3 text-right">Subtotal</th>
+                                                    <th class="px-4 py-3 text-center">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="text-sm">
+                                                <ui:repeat value="#{carritoBean.items}" var="item">
+                                                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                                        <td class="px-4 py-3 font-semibold text-green-700">
+                                                            #{item.producto.nombreProducto}
+                                                        </td>
+                                                        <td class="px-4 py-3 text-right text-gray-700">
+                                                            $<h:outputText value="#{item.producto.precioVenta}">
+                                                                <f:convertNumber pattern="#,##0.00" />
+                                                            </h:outputText>
+                                                        </td>
+                                                        <!-- CANTIDAD CON + / - -->
+                                                        <td class="px-4 py-3 text-center text-gray-700">
+                                                            <div class="flex justify-center">
+                                                                <div class="qty-control">
+                                                                    <p:commandButton value="-"
+                                                                                     title="Disminuir cantidad"
+                                                                                     process="@this"
+                                                                                     actionListener="#{carritoBean.decrementarItem(item)}"
+                                                                                     update=":carritoForm :navForm"
+                                                                                     disabled="#{item.cantidad le 1}"
+                                                                                     styleClass="qty-btn" />
+                                                                    <span class="qty-number">
+                                                                        #{item.cantidad}
+                                                                    </span>
+                                                                    <p:commandButton value="+"
+                                                                                     title="Aumentar cantidad"
+                                                                                     process="@this"
+                                                                                     actionListener="#{carritoBean.incrementarItem(item)}"
+                                                                                     update=":carritoForm :navForm"
+                                                                                     styleClass="qty-btn" />
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="px-4 py-3 text-right font-semibold text-gray-800">
+                                                            $<h:outputText value="#{item.subtotal}">
+                                                                <f:convertNumber pattern="#,##0.00" />
+                                                            </h:outputText>
+                                                        </td>
+
+                                                        <td class="px-4 py-3 text-center">
+                                                            <div class="flex justify-center">
+                                                                <!-- ELIMINAR -->
+                                                                <p:commandButton value="Eliminar"
+                                                                                 process="@this"
+                                                                                 actionListener="#{carritoBean.eliminarItem(item)}"
+                                                                                 update=":carritoForm :navForm"
+                                                                                 styleClass="bg-red-500 text-white px-3 py-1 rounded text-xs"/>
+                                                            </div>
+                                                        </td>
+
+                                                    </tr>
+                                                </ui:repeat>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Resumen y acciones -->
+                            <div class="lg:col-span-1">
+                                <div class="card p-5" id="resumenPanel">
+                                    <h3 class="text-xl font-bold mb-3 text-gray-800">Resumen</h3>
+
+                                    <!-- Cantidad de productos -->
+                                    <div class="flex justify-between mb-1 text-sm text-gray-600">
+                                        <span>Productos:</span>
+                                        <span class="font-semibold text-gray-800">
+                                            #{carritoBean.totalItems}
+                                        </span>
+                                    </div>
+
+                                    <!-- SUBTOTAL SIN IVA -->
+                                    <div class="flex justify-between mb-1 text-sm text-gray-600">
+                                        <span>Subtotal productos:</span>
+                                        <span>
+                                            $<h:outputText value="#{carritoBean.totalProductos}">
+                                                <f:convertNumber pattern="#,##0.00" />
+                                            </h:outputText>
+                                        </span>
+                                    </div>
+
+                                    <!-- IVA -->
+                                    <div class="flex justify-between mb-1 text-sm text-gray-600">
+                                        <span>IVA (1.5%):</span>
+                                        <span>
+                                            $<h:outputText value="#{carritoBean.totalIva}">
+                                                <f:convertNumber pattern="#,##0.00" />
+                                            </h:outputText>
+                                        </span>
+                                    </div>
+
+                                    <!-- TOTAL CON IVA -->
+                                    <div class="flex justify-between text-lg font-bold border-t pt-3 text-green-700 mt-2">
+                                        <span>Total a pagar:</span>
+                                        <span>
+                                            $<h:outputText value="#{carritoBean.subtotalCompra}">
+                                                <f:convertNumber pattern="#,##0.00" />
+                                            </h:outputText>
+                                        </span>
+                                    </div>
+
+                                    <p:commandButton type="button"
+                                                     value="Pagar"
+                                                     onclick="PF('pagoDialog').show();"
+                                                     styleClass="w-full mt-4 btn-primary py-2 rounded-full font-semibold"/>
+
+                                    <!-- Botón / link para volver al catálogo sin validaciones -->
+                                    <p:button outcome="dashboardCliente"
+                                              value="Seguir comprando"
+                                              styleClass="block text-center btn-secondary py-2 rounded-full font-semibold w-full" />
+                                </div>
+                            </div>
+                        </div>
+                    </h:panelGroup>
+
+                    <!-- Diálogo de Pago (simulación realista) -->
+                    <p:dialog id="pagoDialog" header="Pago en línea" widgetVar="pagoDialog"
+                              modal="true" resizable="false" width="520">
+                        <div class="p-4 space-y-4 text-sm">
+                            <p class="text-gray-700">
+                                Esta es una simulación de pago en línea. Los datos que ingreses
+                                <strong>no se enviarán</strong> a ninguna pasarela real, pero el sistema
+                                registrará la venta, actualizará el inventario y luego podrás descargar
+                                tu comprobante en PDF.
+                            </p>
+
+                            <!-- Resumen del cliente y total -->
+                            <div class="grid grid-cols-1 gap-2 text-gray-600 mb-3">
+                                <div class="flex justify-between">
+                                    <span>Cliente:</span>
+                                    <span class="font-semibold">#{usuarioBean.usuario.nombre}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Correo:</span>
+                                    <span class="font-semibold">#{usuarioBean.usuario.correo}</span>
+                                </div>
+
+                                <!-- SUBTOTAL SIN IVA -->
+                                <div class="flex justify-between">
+                                    <span>Subtotal productos:</span>
+                                    <span>
+                                        $<h:outputText value="#{carritoBean.totalProductos}">
+                                            <f:convertNumber pattern="#,##0.00" />
+                                        </h:outputText>
+                                    </span>
+                                </div>
+
+                                <!-- IVA -->
+                                <div class="flex justify-between">
+                                    <span>IVA (1.5%):</span>
+                                    <span>
+                                        $<h:outputText value="#{carritoBean.totalIva}">
+                                            <f:convertNumber pattern="#,##0.00" />
+                                        </h:outputText>
+                                    </span>
+                                </div>
+
+                                <!-- TOTAL CON IVA -->
+                                <div class="flex justify-between text-base font-semibold border-t pt-3 text-green-700 mt-2">
+                                    <span>Total a pagar:</span>
+                                    <span>
+                                        $<h:outputText value="#{carritoBean.subtotalCompra}">
+                                            <f:convertNumber pattern="#,##0.00" />
+                                        </h:outputText>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Medio de pago (lista desplegable) -->
+                            <div class="space-y-2">
+                                <span class="block text-gray-700 font-medium">Medio de pago</span>
+                                <div class="flex space-x-4 text-sm w-full">
+                                    <p:selectOneMenu id="medioPagoSelect"
+                                                     value="#{carritoBean.medioPago}"
+                                                     styleClass="w-full">
+                                        <f:selectItem itemLabel="Selecciona un medio..." itemValue="" noSelectionOption="true" />
+                                        <f:selectItem itemLabel="Tarjeta de crédito" itemValue="CREDITO" />
+                                        <f:selectItem itemLabel="Tarjeta débito" itemValue="DEBITO" />
+                                        <f:selectItem itemLabel="PSE" itemValue="PSE" />
+                                        <!-- Actualizamos el contenedor de los campos -->
+                                        <p:ajax process="@this" update="panelMedioPago" />
+                                    </p:selectOneMenu>
+                                </div>
+                            </div>
+
+                            <!-- Contenedor de los campos que cambian según medio de pago -->
+                            <h:panelGroup id="panelMedioPago">
+                                <!-- CAMPOS TARJETA (se muestran si medioPago != PSE) -->
+                                <h:panelGroup id="pagoTarjeta"
+                                              rendered="#{carritoBean.medioPago ne 'PSE'}">
+                                    <div class="mt-4 space-y-3">
+                                        <div>
+                                            <label for="tipoTarjeta" class="block text-gray-700 mb-1">
+                                                Tipo de tarjeta
+                                            </label>
+                                            <p:selectOneMenu id="tipoTarjeta"
+                                                             value="#{carritoBean.tipoTarjeta}"
+                                                             styleClass="w-full"
+                                                             required="true"
+                                                             requiredMessage="Selecciona el tipo de tarjeta.">
+                                                <f:selectItem itemLabel="Selecciona..." itemValue="" noSelectionOption="true" />
+                                                <f:selectItem itemLabel="Visa" itemValue="VISA" />
+                                                <f:selectItem itemLabel="MasterCard" itemValue="MASTERCARD" />
+                                                <f:selectItem itemLabel="American Express" itemValue="AMEX" />
+                                            </p:selectOneMenu>
+                                        </div>
+
+                                        <div>
+                                            <label for="nombreTitular" class="block text-gray-700 mb-1">
+                                                Nombre del titular
+                                            </label>
+                                            <p:inputText id="nombreTitular"
+                                                         value="#{carritoBean.nombreTitular}"
+                                                         required="true"
+                                                         requiredMessage="El nombre del titular es obligatorio."
+                                                         styleClass="w-full px-3 py-2 border rounded-md" />
+                                        </div>
+
+                                        <div>
+                                            <label for="numeroTarjeta" class="block text-gray-700 mb-1">
+                                                Número de tarjeta
+                                            </label>
+                                            <p:inputMask id="numeroTarjeta"
+                                                         value="#{carritoBean.numeroTarjeta}"
+                                                         mask="9999 9999 9999 9999"
+                                                         required="true"
+                                                         requiredMessage="El número de tarjeta es obligatorio."
+                                                         styleClass="w-full px-3 py-2 border rounded-md" />
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label for="fechaExp" class="block text-gray-700 mb-1">
+                                                    Fecha expiración (MM/AA)
+                                                </label>
+                                                <p:inputMask id="fechaExp"
+                                                             value="#{carritoBean.fechaExpiracion}"
+                                                             mask="99/99"
+                                                             required="true"
+                                                             requiredMessage="La fecha de expiración es obligatoria."
+                                                             styleClass="w-full px-3 py-2 border rounded-md" />
+                                            </div>
+                                            <div>
+                                                <label for="cvv" class="block text-gray-700 mb-1">
+                                                    CVV
+                                                </label>
+                                                <p:inputMask id="cvv"
+                                                             value="#{carritoBean.cvv}"
+                                                             mask="999"
+                                                             required="true"
+                                                             requiredMessage="El CVV es obligatorio."
+                                                             styleClass="w-full px-3 py-2 border rounded-md" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </h:panelGroup>
+
+                                <!-- CAMPOS PSE (se muestran si medioPago == PSE) -->
+                                <h:panelGroup id="pagoPse"
+                                              rendered="#{carritoBean.medioPago eq 'PSE'}">
+                                    <div class="mt-4 space-y-3">
+                                        <div>
+                                            <label class="block text-gray-700 mb-1">
+                                                Número de identificación
+                                            </label>
+                                            <p:inputText value="#{carritoBean.pseNumero}"
+                                                         styleClass="w-full px-3 py-2 border rounded-md" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 mb-1">
+                                                Nombre completo
+                                            </label>
+                                            <p:inputText value="#{carritoBean.pseNombre}"
+                                                         styleClass="w-full px-3 py-2 border rounded-md" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 mb-1">
+                                                Correo electrónico
+                                            </label>
+                                            <p:inputText value="#{carritoBean.pseCorreo}"
+                                                         styleClass="w-full px-3 py-2 border rounded-md" />
+                                        </div>
+                                    </div>
+                                </h:panelGroup>
+                            </h:panelGroup>
+
+                            <div class="flex justify-end space-x-2 mt-4">
+                                <p:commandButton value="Cancelar"
+                                                 type="button"
+                                                 onclick="PF('pagoDialog').hide();"
+                                                 styleClass="bg-gray-500 text-white px-4 py-2 rounded" />
+                                <p:commandButton value="Confirmar pago"
+                                                 actionListener="#{carritoBean.procederAlPago}"
+                                                 process="@form"
+                                                 update=":carritoForm :messages :navForm"
+                                                 oncomplete="if(!args.validationFailed) PF('pagoDialog').hide();"
+                                                 styleClass="bg-green-600 text-white px-4 py-2 rounded" />
+                            </div>
+                        </div>
+                    </p:dialog>
+
+                    <!-- PAGO EXITOSO / RESUMEN -->
+                    <h:panelGroup rendered="#{not empty carritoBean.ventasUltimoPago}">
+                        <div class="mt-8 card p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                    <span class="text-green-600 text-lg">&#10003;</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-gray-800">
+                                        Pago exitoso
+                                    </h3>
+                                    <p class="text-sm text-gray-600">
+                                        Tu pedido ha sido registrado correctamente. A continuación encontrarás el resumen de tu compra.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Tabla resumen de la compra -->
+                            <table class="w-full text-sm mb-4">
+                                <thead>
+                                    <tr class="text-left border-b">
+                                        <th class="py-2 text-gray-600">Producto</th>
+                                        <th class="py-2 text-center text-gray-600">Cantidad</th>
+                                        <th class="py-2 text-right text-gray-600">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <ui:repeat value="#{carritoBean.ventasUltimoPago}" var="venta">
+                                        <tr class="border-b">
+                                            <td class="py-2">
+                                                #{venta.producto.nombreProducto}
+                                            </td>
+                                            <td class="py-2 text-center">
+                                                #{venta.cantidad}
+                                            </td>
+                                            <td class="py-2 text-right">
+                                                $<h:outputText value="#{venta.totalPagar}">
+                                                    <f:convertNumber pattern="#,##0.00" />
+                                                </h:outputText>
+                                            </td>
+                                        </tr>
+                                    </ui:repeat>
+                                </tbody>
+                            </table>
+
+                            <div class="text-xs text-gray-700 space-y-1 mb-4">
+                                <div class="flex justify-between">
+                                    <span>Total productos:</span>
+                                    <span>
+                                        $<h:outputText value="#{carritoBean.ultimoTotalProductos}">
+                                            <f:convertNumber pattern="#,##0.00" />
+                                        </h:outputText>
+                                    </span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>IVA (1.5%):</span>
+                                    <span>
+                                        $<h:outputText value="#{carritoBean.ultimoTotalIva}">
+                                            <f:convertNumber pattern="#,##0.00" />
+                                        </h:outputText>
+                                    </span>
+                                </div>
+                                <div class="flex justify-between font-semibold text-green-700">
+                                    <span>Total pagado:</span>
+                                    <span>
+                                        $<h:outputText value="#{carritoBean.ultimoSubtotalCompra}">
+                                            <f:convertNumber pattern="#,##0.00" />
+                                        </h:outputText>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-gray-600 mb-6">
+                                Tu pedido llegará entre <strong>2 y 6 días hábiles</strong>.
+                                Te enviaremos actualizaciones al correo
+                                <strong>#{usuarioBean.usuario.correo}</strong>.
+                            </p>
+
+                            <div class="mt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <p:button outcome="dashboardCliente"
+                                          value="Seguir comprando"
+                                          styleClass="btn-secondary px-8 py-2 rounded-full font-semibold texto-center" />
+
+                                
+                            </div>
+                        </div>
+                    </h:panelGroup>
+
+                </h:form>
+
+                <!-- Historial de compras -->
+                <h:panelGroup rendered="#{historialComprasBean.compras.size() > 0}" styleClass="mt-12 block">
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Historial de compras</h3>
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left text-green-700 border-b">
+                                    <th class="py-2">Fecha</th>
+                                    <th class="py-2">Producto</th>
+                                    <th class="py-2 text-center">Cantidad</th>
+                                    <th class="py-2 text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <ui:repeat value="#{historialComprasBean.compras}" var="venta">
+                                    <tr class="border-b">
+                                        <td class="py-2">
+                                            <h:outputText value="#{venta.fechaVentaFormateada}" />
+                                        </td>
+                                        <td class="py-2">#{venta.producto.nombreProducto}</td>
+                                        <td class="py-2 text-center">#{venta.cantidad}</td>
+                                        <td class="py-2 text-right font-semibold">
+                                            $<h:outputText value="#{venta.totalPagar}">
+                                                <f:convertNumber pattern="#,##0.00" />
+                                            </h:outputText>
+                                        </td>
+                                    </tr>
+                                </ui:repeat>
+                            </tbody>
+                        </table>
+                    </div>
+                </h:panelGroup>
+            </main>
+
+            <footer class="footer text-white py-8">
+                <div class="container mx-auto px-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <div>
+                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span>🌱</span> <span>AgriviApp</span>
+                            </h3>
+                            <p class="text-gray-200 text-sm leading-relaxed">
+                                Conectando agricultores y productores con soluciones agrícolas seguras y efectivas.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h4 class="font-semibold mb-4 text-sm tracking-wide uppercase">
+                                Contacto
+                            </h4>
+                            <p class="text-gray-200 text-sm leading-relaxed">
+                                Correo: soporte@agriviapp.com<br/>
+                                Teléfono: +57 300 000 0000
+                            </p>
+                        </div>
+
+                        <div>
+                            <h4 class="font-semibold mb-4 text-sm tracking-wide uppercase">
+                                Ayuda
+                            </h4>
+                            <ul class="text-gray-200 text-sm space-y-1">
+                                <li>Preguntas Frecuentes</li>
+                                <li>Soporte técnico</li>
+                                <li>Términos y condiciones</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="font-semibold mb-4 text-sm tracking-wide uppercase">
+                                Síguenos
+                            </h4>
+                            <p class="text-gray-200 text-xs mb-2">
+                                Mantente al día con nuestras novedades.
+                            </p>
+                            <div class="flex space-x-4 text-gray-100 text-base">
+                                <a href="#" class="hover:text-white transition-colors">
+                                    <i class="bi bi-facebook"></i>
+                                </a>
+                                <a href="#" class="hover:text-white transition-colors">
+                                    <i class="bi bi-instagram"></i>
+                                </a>
+                                <a href="#" class="hover:text-white transition-colors">
+                                    <i class="bi bi-twitter"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-600 mt-8 pt-4 text-center text-gray-200 text-xs">
+                        <p>© 2025 AgriviApp. Todos los derechos reservados.</p>
+                    </div>
+                </div>
+            </footer>
+
+        </div>
+    </h:body>
+</html>

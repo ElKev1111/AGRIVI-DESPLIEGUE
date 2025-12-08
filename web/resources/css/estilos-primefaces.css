@@ -1,0 +1,71 @@
+/* Estilos básicos para componentes PrimeFaces */
+.ui-inputnumber, 
+.ui-calendar, 
+.ui-selectonemenu {
+    width: 100% !important;
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.ui-button {
+    margin: 2px;
+    padding: 8px 16px;
+    border: 1px solid #007bff;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.ui-button:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Para que los componentes se vean similares a Bootstrap */
+.ui-widget {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+/* Estilos específicos para inputNumber */
+.ui-inputnumber-input {
+    width: 100% !important;
+    padding: 8px !important;
+}
+
+/* Estilos para calendario */
+.ui-calendar .ui-inputfield {
+    width: 100% !important;
+}
+
+/* Estilos para selectOneMenu */
+.ui-selectonemenu .ui-selectonemenu-label {
+    width: 100% !important;
+    padding: 8px !important;
+}
+
+/* Estilos para diálogos */
+.ui-dialog {
+    z-index: 10000 !important;
+}
+
+.ui-dialog-titlebar-close {
+    background: transparent !important;
+    border: none !important;
+    font-size: 1.2em !important;
+    color: #000 !important;
+    cursor: pointer !important;
+}
+
+.ui-dialog-titlebar-close:hover {
+    color: #dc3545 !important;
+}
+
+/* Asegurar que los componentes sean visibles */
+.ui-inputfield {
+    background: white !important;
+    color: black !important;
+}

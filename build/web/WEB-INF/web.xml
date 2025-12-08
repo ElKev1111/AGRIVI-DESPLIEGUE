@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.1"
+         xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+                             http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
+
+    <!-- Modo de JSF -->
+    <context-param>
+        <param-name>javax.faces.PROJECT_STAGE</param-name>
+        <param-value>Development</param-value>
+    </context-param>
+
+    <!-- Guardado de estado en servidor -->
+    <context-param>
+        <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
+        <param-value>server</param-value>
+    </context-param>
+
+    <!-- Refresco de facelets -->
+    <context-param>
+        <param-name>javax.faces.FACELETS_REFRESH_PERIOD</param-name>
+        <param-value>0</param-value>
+    </context-param>
+
+    <!-- Config de Weld -->
+    <context-param>
+        <param-name>org.jboss.weld.serialization.beanIdentifierIndexOptimization</param-name>
+        <param-value>false</param-value>
+    </context-param>
+
+    <!-- PrimeFaces: usar uploader nativo (Servlet 3) -->
+    <context-param>
+        <param-name>primefaces.UPLOADER</param-name>
+        <param-value>native</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>agrivi.facturas.path</param-name>
+        <param-value>C:/AGRIVI/facturas</param-value>
+    </context-param>
+
+
+    <!-- Faces Servlet -->
+    <servlet>
+        <servlet-name>Faces Servlet</servlet-name>
+        <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+
+        <!-- Configuración para subida de archivos -->
+        <multipart-config>
+            <!-- 5 MB por archivo -->
+            <max-file-size>5242880</max-file-size>
+            <!-- 20 MB por request -->
+            <max-request-size>20971520</max-request-size>
+            <file-size-threshold>0</file-size-threshold>
+        </multipart-config>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Faces Servlet</servlet-name>
+        <url-pattern>*.xhtml</url-pattern>
+    </servlet-mapping>
+
+
+    <!-- Tiempo de sesión -->
+    <session-config>
+        <session-timeout>60</session-timeout>
+    </session-config>
+
+
+    <!-- Página de inicio -->
+    <welcome-file-list>
+        <welcome-file>dashboardPresentacion.xhtml</welcome-file>
+    </welcome-file-list>
+
+
+    <!-- Manejo de ViewExpiredException (ARREGLADO) -->
+    <error-page>
+        <exception-type>javax.faces.application.ViewExpiredException</exception-type>
+        <location>/dashboardPresentacion.xhtml</location>
+    </error-page>
+
+
+    <!-- Errores HTTP -->
+    <error-page>
+        <error-code>403</error-code>
+        <location>/Error403.xhtml</location>
+    </error-page>
+
+    <error-page>
+        <error-code>404</error-code>
+        <location>/Error404.xhtml</location>
+    </error-page>
+
+    <error-page>
+        <error-code>500</error-code>
+        <location>/Error500.xhtml</location>
+    </error-page>
+
+    <!-- Captura general de errores inesperados -->
+    <error-page>
+        <exception-type>java.lang.Throwable</exception-type>
+        <location>/Error500.xhtml</location>
+    </error-page>
+
+</web-app>

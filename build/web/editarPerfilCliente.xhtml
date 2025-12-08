@@ -1,0 +1,623 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      lang="es">
+    <h:head>
+        <title>Editar Perfil - AgriviApp</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+
+        <style>
+            :root {
+                --agrivi-navy: #4F5E8C;
+                --agrivi-green: #17A649;
+                --agrivi-dark-green: #16592E;
+                --agrivi-cream: #F2EFDF;
+                --agrivi-sand: #D9A273;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html, body {
+                height: 100%;
+                margin: 0;
+            }
+
+            body {
+                font-family: 'Inter', sans-serif;
+                background: linear-gradient(135deg, var(--agrivi-cream), #d7f0ff);
+                color: #1f2937;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* HEADER */
+            .header {
+                background: linear-gradient(90deg, var(--agrivi-dark-green), var(--agrivi-navy));
+                box-shadow: 0 4px 20px rgba(22, 89, 46, 0.2);
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+            }
+
+            .nav-link {
+                color: #ffffff;
+                padding: 0.5rem 1rem;
+                border-radius: 9999px;
+                transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
+                font-size: 0.85rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                text-decoration: none;
+            }
+
+            .nav-link:hover {
+                background-color: rgba(255, 255, 255, 0.18);
+                box-shadow: 0 0 0 1px rgba(255,255,255,0.28);
+                transform: translateY(-1px);
+            }
+
+            .nav-link-active {
+                background-color: rgba(255, 255, 255, 0.22);
+                box-shadow: 0 0 0 1px rgba(255,255,255,0.35);
+            }
+
+            .cart-count {
+                background-color: #ffffff;
+                color: var(--agrivi-dark-green);
+                border-radius: 9999px;
+                min-width: 22px;
+                height: 22px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.75rem;
+                font-weight: 700;
+            }
+
+            main {
+                flex: 1 0 auto;
+            }
+
+            /* PAGE HEADER */
+            .page-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 2rem;
+                background: white;
+                padding: 1.5rem 2rem;
+                border-radius: 1rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            }
+
+            .page-header h2 {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #1f2937;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin: 0;
+            }
+
+            .page-header h2 i {
+                color: var(--agrivi-green);
+            }
+
+            /* FORM CARD */
+            .form-card {
+                background: white;
+                border-radius: 1rem;
+                padding: 2rem;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: #1f2937;
+                margin-bottom: 1.5rem;
+                padding-bottom: 0.75rem;
+                border-bottom: 2px solid #e5e7eb;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .section-title i {
+                color: var(--agrivi-green);
+            }
+
+            /* FORM ELEMENTS */
+            .form-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .form-field {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .form-field.full-width {
+                grid-column: 1 / -1;
+            }
+
+            .form-label {
+                font-size: 0.875rem;
+                font-weight: 600;
+                color: var(--agrivi-navy);
+                margin-bottom: 0.5rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .form-label i {
+                color: var(--agrivi-green);
+                font-size: 1rem;
+            }
+
+            .form-control {
+                width: 100%;
+                padding: 0.875rem 1rem;
+                border: 2px solid #e5e7eb;
+                border-radius: 0.75rem;
+                font-size: 0.95rem;
+                transition: all 0.3s ease;
+                background: white;
+            }
+
+            .form-control:focus {
+                outline: none;
+                border-color: var(--agrivi-green);
+                box-shadow: 0 0 0 3px rgba(23, 166, 73, 0.1);
+            }
+
+            /* FILE UPLOAD */
+            .file-upload-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .current-photo {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                padding: 1rem;
+                background: var(--agrivi-cream);
+                border-radius: 0.75rem;
+            }
+
+            .current-photo img {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                object-fit: cover;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .current-photo-info {
+                flex: 1;
+            }
+
+            .current-photo-label {
+                font-size: 0.75rem;
+                color: var(--agrivi-navy);
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            /* BUTTONS */
+            .btn-container {
+                display: flex;
+                gap: 1rem;
+                margin-top: 2rem;
+                padding-top: 2rem;
+                border-top: 2px solid #e5e7eb;
+            }
+
+            .btn-save {
+                background: linear-gradient(135deg, var(--agrivi-green) 0%, var(--agrivi-dark-green) 100%);
+                color: white;
+                border: none;
+                padding: 0.875rem 2rem;
+                border-radius: 9999px;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(23, 166, 73, 0.3);
+                font-size: 0.95rem;
+                cursor: pointer;
+            }
+
+            .btn-save:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(23, 166, 73, 0.4);
+                color: white;
+            }
+
+            .btn-cancel {
+                background: white;
+                color: var(--agrivi-green);
+                border: 2px solid var(--agrivi-green);
+                padding: 0.875rem 2rem;
+                border-radius: 9999px;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                font-size: 0.95rem;
+            }
+
+            .btn-cancel:hover {
+                background: var(--agrivi-cream);
+                color: var(--agrivi-dark-green);
+                border-color: var(--agrivi-dark-green);
+                transform: translateY(-2px);
+            }
+
+            /* FOOTER */
+            footer {
+                background: linear-gradient(135deg, var(--agrivi-dark-green) 0%, #0d3d1f 100%);
+                margin-top: 4rem;
+                flex-shrink: 0;
+            }
+
+            /* RESPONSIVE */
+            @media (max-width: 768px) {
+                .page-header {
+                    flex-direction: column;
+                    gap: 1rem;
+                    text-align: center;
+                }
+
+                .form-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .btn-container {
+                    flex-direction: column;
+                }
+
+                .btn-save, .btn-cancel {
+                    width: 100%;
+                    justify-content: center;
+                }
+            }
+
+            /* PRIMEFACES OVERRIDES */
+            .ui-fileupload-simple {
+                width: 100%;
+            }
+
+            .ui-fileupload-choose {
+                background: linear-gradient(135deg, var(--agrivi-green) 0%, var(--agrivi-dark-green) 100%) !important;
+                border: none !important;
+                color: white !important;
+                padding: 0.75rem 1.5rem !important;
+                border-radius: 0.75rem !important;
+                font-weight: 600 !important;
+                transition: all 0.3s ease !important;
+            }
+
+            .ui-fileupload-choose:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(23, 166, 73, 0.3) !important;
+            }
+
+            .ui-inputtext, .ui-inputtextarea {
+                width: 100% !important;
+                padding: 0.875rem 1rem !important;
+                border: 2px solid #e5e7eb !important;
+                border-radius: 0.75rem !important;
+                font-size: 0.95rem !important;
+                transition: all 0.3s ease !important;
+            }
+
+            .ui-inputtext:focus, .ui-inputtextarea:focus {
+                border-color: var(--agrivi-green) !important;
+                box-shadow: 0 0 0 3px rgba(23, 166, 73, 0.1) !important;
+            }
+
+            .ui-button {
+                background: linear-gradient(135deg, var(--agrivi-green) 0%, var(--agrivi-dark-green) 100%) !important;
+                border: none !important;
+                color: white !important;
+                padding: 0.875rem 2rem !important;
+                border-radius: 9999px !important;
+                font-weight: 600 !important;
+            }
+        </style>
+    </h:head>
+
+    <h:body>
+        <f:metadata>
+            <f:viewAction action="#{usuarioBean.verificarSesionCliente}" onPostback="false" />
+        </f:metadata>
+
+        <!-- HEADER -->
+        <header class="header text-white p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold tracking-tight">🌱 AgriviApp</h1>
+
+                <h:form id="navForm">
+                    <nav>
+                        <ul class="flex space-x-3 items-center text-sm">
+                            <li>
+                                <h:link outcome="perfilCliente"
+                                        value="Perfil"
+                                        styleClass="nav-link nav-link-active" />
+                            </li>
+                            <li>
+                                <h:link outcome="dashboardCliente"
+                                        value="Catálogo"
+                                        styleClass="nav-link" />
+                            </li>
+                            <li>
+                                <p:link outcome="carrito" styleClass="nav-link">
+                                    <i class="bi bi-cart3"></i>
+                                    <span>Mi carrito</span>
+                                    <span class="cart-count">
+                                        <h:outputText value="#{carritoBean.totalItems}" />
+                                    </span>
+                                </p:link>
+                            </li>
+                            <li>
+                                <p:commandLink value="Cerrar Sesión"
+                                               action="#{usuarioBean.logout}"
+                                               styleClass="nav-link"
+                                               ajax="false">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                </p:commandLink>
+                            </li>
+                        </ul>
+                    </nav>
+                </h:form>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main class="container mx-auto px-4 py-8 md:py-10">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h2>
+                    <i class="bi bi-pencil-square"></i>
+                    Editar Perfil
+                </h2>
+                <h:link outcome="perfilCliente.xhtml" styleClass="btn-cancel">
+                    <i class="bi bi-x-circle"></i>
+                    <span>Cancelar</span>
+                </h:link>
+            </div>
+
+            <!-- Form Card -->
+            <div class="form-card">
+                <h:form enctype="multipart/form-data">
+                    <p:growl id="growl" showDetail="true" life="4000" />
+
+                    <h3 class="section-title">
+                        <i class="bi bi-person-circle"></i>
+                        Información Personal
+                    </h3>
+
+                    <div class="form-grid">
+                        <!-- Nombre -->
+                        <div class="form-field">
+                            <label class="form-label">
+                                <i class="bi bi-person-fill"></i>
+                                Nombre completo
+                            </label>
+                            <p:inputText value="#{usuarioBean.usuario.nombre}" 
+                                         styleClass="form-control" 
+                                         required="true"
+                                         requiredMessage="El nombre es obligatorio"/>
+                        </div>
+
+                        <!-- Correo -->
+                        <div class="form-field">
+                            <label class="form-label">
+                                <i class="bi bi-envelope"></i>
+                                Correo electrónico
+                            </label>
+                            <p:inputText value="#{usuarioBean.usuario.correo}" 
+                                         styleClass="form-control" 
+                                         required="true"
+                                         requiredMessage="El correo es obligatorio"/>
+                        </div>
+
+                        <!-- Teléfono -->
+                        <div class="form-field">
+                            <label class="form-label">
+                                <i class="bi bi-phone"></i>
+                                Teléfono
+                            </label>
+                            <p:inputText value="#{usuarioBean.usuario.celular}" 
+                                         styleClass="form-control"
+                                         placeholder="Ejemplo: +57 300 123 4567"/>
+                        </div>
+
+                        <!-- Dirección -->
+                        <div class="form-field">
+                            <label class="form-label">
+                                <i class="bi bi-geo-alt"></i>
+                                Dirección
+                            </label>
+                            <p:inputText value="#{usuarioBean.usuario.direccion}" 
+                                         styleClass="form-control"
+                                         placeholder="Calle, número, ciudad"/>
+                        </div>
+
+                        <!-- Biografía -->
+                        <div class="form-field full-width">
+                            <label class="form-label">
+                                <i class="bi bi-file-text"></i>
+                                Biografía
+                            </label>
+                            <p:inputTextarea value="#{usuarioBean.usuario.biografia}" 
+                                             autoResize="true" 
+                                             rows="4" 
+                                             styleClass="form-control"
+                                             placeholder="Cuéntanos un poco sobre ti..."/>
+                        </div>
+
+                        <!-- Foto de perfil -->
+                        <div class="form-field full-width">
+                            <label class="form-label">
+                                <i class="bi bi-camera"></i>
+                                Foto de perfil
+                            </label>
+                            <div class="file-upload-wrapper">
+                                <p:fileUpload value="#{usuarioBean.archivoFoto}" 
+                                              mode="simple" 
+                                              skinSimple="true" 
+                                              accept="image/*"
+                                              label="Seleccionar nueva foto"/>
+
+                                <h:panelGroup rendered="#{not empty usuarioBean.usuario.fotoPerfil}">
+                                    <div class="current-photo">
+                                        <h:graphicImage value="/resources/images/perfiles/#{usuarioBean.usuario.fotoPerfil}" />
+                                        <div class="current-photo-info">
+                                            <div class="current-photo-label">Foto actual</div>
+                                            <p class="text-sm text-gray-600 mt-1">Esta es tu foto de perfil actual</p>
+                                        </div>
+                                    </div>
+                                </h:panelGroup>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ================= SEGURIDAD / CAMBIO DE CONTRASEÑA ================= -->
+                    <h3 class="section-title">
+                        <i class="bi bi-shield-lock"></i>
+                        Seguridad
+                    </h3>
+
+                    <div class="form-grid">
+                        <!-- Contraseña actual -->
+                        <div class="form-field">
+                            <label class="form-label">
+                                <i class="bi bi-key-fill"></i>
+                                Contraseña actual
+                            </label>
+                            <p:password value="#{usuarioBean.passwordActual}"
+                                        styleClass="form-control"
+                                        toggleMask="true"
+                                        feedback="false"
+                                        placeholder="Tu contraseña actual"/>
+                        </div>
+
+                        <!-- Nueva contraseña -->
+                        <div class="form-field">
+                            <label class="form-label">
+                                <i class="bi bi-lock-fill"></i>
+                                Nueva contraseña
+                            </label>
+                            <p:password value="#{usuarioBean.nuevaPassword}"
+                                        styleClass="form-control"
+                                        toggleMask="true"
+                                        feedback="true"
+                                        placeholder="Mínimo 8 caracteres"/>
+                        </div>
+
+                        <!-- Confirmar nueva contraseña -->
+                        <div class="form-field">
+                            <label class="form-label">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Confirmar nueva contraseña
+                            </label>
+                            <p:password value="#{usuarioBean.confirmarNuevaPassword}"
+                                        styleClass="form-control"
+                                        toggleMask="true"
+                                        feedback="false"
+                                        placeholder="Repite la nueva contraseña"/>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 text-sm text-gray-600">
+                        Si no deseas cambiar tu contraseña, deja estos tres campos vacíos.
+                        La nueva contraseña debe incluir mayúscula, minúscula y número.
+                    </div>
+
+
+                    <!-- Buttons -->
+                    <div class="btn-container">
+                        <p:commandButton value="Guardar Cambios" 
+                                         action="#{usuarioBean.actualizarPerfil}" 
+                                         styleClass="btn-save" 
+                                         ajax="false"
+                                         icon="bi bi-check-circle"/>
+                        <h:link outcome="perfilCliente.xhtml" styleClass="btn-cancel">
+                            <i class="bi bi-x-circle"></i>
+                            <span>Cancelar</span>
+                        </h:link>
+                    </div>
+                </h:form>
+            </div>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="text-white py-8">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">🌱 AgriviApp</h3>
+                        <p class="text-gray-300 text-sm">
+                            Conectando agricultores y productores con soluciones agrícolas seguras y efectivas.
+                        </p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">Contacto</h4>
+                        <p class="text-gray-300 text-sm">
+                            Correo: soporte@agriviapp.com<br/>
+                            Teléfono: +57 300 000 0000
+                        </p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">Ayuda</h4>
+                        <ul class="text-gray-300 text-sm space-y-1">
+                            <li>Preguntas Frecuentes</li>
+                            <li>Soporte técnico</li>
+                            <li>Términos y condiciones</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">Síguenos</h4>
+                        <div class="flex space-x-4 text-gray-300 text-sm">
+                            <a href="#" class="hover:text-white transition-colors">
+                                <i class="bi bi-facebook"></i>
+                            </a>
+                            <a href="#" class="hover:text-white transition-colors">
+                                <i class="bi bi-instagram"></i>
+                            </a>
+                            <a href="#" class="hover:text-white transition-colors">
+                                <i class="bi bi-twitter"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 mt-8 pt-4 text-center text-gray-400 text-xs">
+                    <p>© 2025 AgriviApp. Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </footer>
+    </h:body>
+</html>

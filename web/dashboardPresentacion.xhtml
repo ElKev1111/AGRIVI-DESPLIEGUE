@@ -1,0 +1,951 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+    <h:head>
+        <title>AgriviApp - Productos Agrícolas</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+        <style>
+            :root {
+                --agrivi-navy: #4F5E8C;
+                --agrivi-green: #0b9446;
+                --agrivi-dark-green: #0a7a3a;
+                --agrivi-cream: #F2F7F3;
+                --agrivi-sand: #D9A273;
+            }
+
+            html, body {
+                height: 100%;
+                margin: 0;
+            }
+
+            body {
+                font-family: 'Inter', sans-serif;
+                background: linear-gradient(135deg, var(--agrivi-cream), #d7f0ff);
+                color: #1f2937;
+            }
+
+            .header {
+                background: linear-gradient(90deg, var(--agrivi-dark-green), var(--agrivi-navy));
+            }
+
+            .nav-link {
+                color: #ffffff;
+                padding: 0.45rem 0.95rem;
+                border-radius: 9999px;
+                transition: background-color 0.2s, box-shadow 0.2s, transform 0.08s;
+                font-size: 0.85rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                white-space: nowrap;
+            }
+
+            .nav-link:hover {
+                background-color: rgba(255, 255, 255, 0.16);
+                box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
+                transform: translateY(-1px);
+            }
+
+            .product-card {
+                position: relative;
+                background: radial-gradient(circle at top left,
+                    rgba(23, 166, 73, 0.15), #ffffff);
+                border-radius: 1.5rem;
+                box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+                padding: 1.5rem 1.5rem 1.25rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                border: 1px solid rgba(15, 23, 42, 0.03);
+                transition: transform 0.18s ease, box-shadow 0.18s ease, translate 0.18s ease;
+            }
+
+            .product-card:hover {
+                transform: translateY(-6px);
+                box-shadow: 0 22px 50px rgba(15, 23, 42, 0.24);
+            }
+
+            /* Chapita en la esquina superior */
+            .product-badge {
+                position: absolute;
+                top: 1rem;
+                left: 1rem;
+                padding: 0.25rem 0.7rem;
+                background: rgba(22, 163, 74, 0.12);
+                border-radius: 999px;
+                font-size: 0.7rem;
+                font-weight: 600;
+                color: #047857;
+            }
+
+            .product-image {
+                width: 100%;
+                height: 230px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: #f3f4f6;
+                border-radius: 0.9rem;
+                margin-bottom: 1rem;
+                overflow: hidden;
+                padding: 0.5rem;
+            }
+
+            .product-image img {
+                max-height: 100%;
+                max-width: 100%;
+                width: auto;
+                height: auto;
+                object-fit: contain;
+                transition: transform 0.25s ease;
+            }
+
+            .product-card:hover .product-image img {
+                transform: scale(1.04);
+            }
+
+            .btn-primary {
+                background: radial-gradient(circle at 0% 0%, #34d399, #16a34a);
+                color: #ffffff;
+                border: none;
+                padding: 0.55rem 1.6rem;
+                border-radius: 9999px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.45rem;
+                box-shadow: 0 12px 25px rgba(22, 163, 74, 0.35);
+                transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+            }
+
+            .btn-primary::before {
+                content: "\f07a"; /* ícono carrito Font Awesome */
+                font-family: "Font Awesome 6 Free";
+                font-weight: 900;
+                font-size: 0.9rem;
+            }
+
+            .btn-primary:hover {
+                transform: translateY(-1px);
+                filter: brightness(1.05);
+                box-shadow: 0 16px 40px rgba(22, 163, 74, 0.45);
+            }
+
+            .btn-secondary {
+                background-color: #ffffff;
+                color: var(--agrivi-dark-green);
+                border: 1px solid rgba(15, 23, 42, 0.1);
+                transition: background-color 0.2s ease-in-out, color 0.2s, box-shadow 0.2s;
+            }
+
+            .btn-secondary:hover {
+                background-color: #f9fafb;
+                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+            }
+
+            .text-green-700,
+            .text-emerald-600 {
+                color: var(--agrivi-dark-green);
+            }
+
+            .hero-section {
+                background-color: #ffffff;
+                border-radius: 1.5rem;
+                box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+                padding: 2.5rem 2rem;
+                margin-bottom: 2.5rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+                animation: fadeInUp 0.5s ease-out;
+            }
+
+            .hero-section::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at top left, rgba(23, 166, 73, 0.18), transparent 55%);
+                pointer-events: none;
+            }
+
+            .hero-content {
+                position: relative;
+                z-index: 1;
+            }
+
+            .hero-image {
+                position: relative;
+                z-index: 1;
+                width: 100%;
+                max-width: 500px;
+                border-radius: 1.25rem;
+                margin-top: 1.5rem;
+                overflow: hidden;
+                box-shadow: 0 14px 36px rgba(15, 23, 42, 0.22);
+            }
+
+            .hero-image img {
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .info-section {
+                background-color: #ffffff;
+                border-radius: 1.25rem;
+                box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+                padding: 2rem;
+                margin-bottom: 2rem;
+            }
+
+            .feature-icon {
+                background: radial-gradient(circle at 30% 30%, rgba(23, 166, 73, 0.18), rgba(23, 166, 73, 0.06));
+                color: var(--agrivi-green);
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 1rem;
+                font-size: 1.5rem;
+                box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+            }
+
+            .chip {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.15rem 0.6rem;
+                border-radius: 999px;
+                background-color: rgba(22, 163, 74, 0.08);
+                color: #047857;
+                font-size: 0.7rem;
+                font-weight: 600;
+                margin-left: 0.4rem;
+            }
+
+            .cart-count {
+                background-color: #ffffff;
+                color: var(--agrivi-dark-green);
+                border-radius: 9999px;
+                width: 24px;
+                height: 24px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.75rem;
+                font-weight: 700;
+                margin-left: 0.4rem;
+                box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08);
+            }
+
+            .badge-stock {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.15rem 0.55rem;
+                border-radius: 9999px;
+                font-size: 0.7rem;
+                font-weight: 600;
+                background-color: rgba(22, 89, 46, 0.08);
+                color: var(--agrivi-dark-green);
+            }
+
+            .qty-control {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.4rem;
+                background-color: var(--agrivi-cream);
+                border-radius: 9999px;
+                padding: 0.15rem 0.4rem;
+            }
+
+            .qty-number {
+                min-width: 2rem;
+                text-align: center;
+                font-weight: 600;
+                color: var(--agrivi-dark-green);
+            }
+
+            .qty-btn {
+                width: 1.6rem;
+                height: 1.6rem;
+                border-radius: 9999px;
+                font-size: 0.9rem;
+                border: none;
+                background-color: #ffffff;
+                color: var(--agrivi-dark-green);
+                box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+            }
+
+            .qty-btn:hover {
+                background-color: var(--agrivi-sand);
+                color: #ffffff;
+            }
+
+            .qty-btn:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+                background-color: #f3f4f6;
+                color: #9ca3af;
+            }
+
+            /* ----------- ESTILOS PARA EL DIÁLOGO DEL CARRITO ----------- */
+
+            .cart-dialog.ui-dialog {
+                border-radius: 1.25rem !important;
+                overflow: hidden;
+            }
+
+            .cart-dialog .ui-dialog-titlebar {
+                background: linear-gradient(90deg, var(--agrivi-dark-green), var(--agrivi-navy));
+                color: #ffffff;
+                border: none;
+                padding: 0.75rem 1.25rem;
+            }
+
+            .cart-dialog .ui-dialog-title {
+                font-size: 1rem;
+                font-weight: 600;
+            }
+
+            .cart-dialog .ui-dialog-content {
+                padding: 1.5rem !important;
+                background-color: #f3f4f6;
+            }
+
+            .cart-table th,
+            .cart-table td {
+                font-size: 0.95rem;
+                padding-top: 0.9rem;
+                padding-bottom: 0.9rem;
+            }
+
+            .cart-table th {
+                font-weight: 600;
+            }
+
+            .summary-card {
+                border-radius: 1rem;
+                box-shadow: 0 10px 25px rgba(15,23,42,0.12);
+            }
+
+            /* ----------- BOTONES MODERNOS PRIMEFACES ----------- */
+
+            .modern-btn.ui-button {
+                border-radius: 9999px;
+                border: none;
+                padding: 0.45rem 1.6rem;
+                background: linear-gradient(135deg, var(--agrivi-green), var(--agrivi-dark-green));
+                color: #ffffff;
+                font-weight: 600;
+                box-shadow: 0 10px 18px rgba(15,23,42,0.18);
+            }
+
+            .modern-btn.ui-button:hover {
+                background: linear-gradient(135deg, var(--agrivi-dark-green), #064e3b);
+            }
+
+            .modern-btn-secondary.ui-button {
+                border-radius: 9999px;
+                border: 1px solid rgba(15,23,42,0.18);
+                padding: 0.45rem 1.6rem;
+                background-color: #ffffff;
+                color: #111827;
+                font-weight: 500;
+                box-shadow: 0 6px 14px rgba(15,23,42,0.12);
+            }
+
+            .modern-btn-secondary.ui-button:hover {
+                background-color: #f3f4f6;
+            }
+
+            .cart-button-modern.ui-button {
+                border-radius: 9999px;
+                border: none;
+                padding: 0.35rem 1.4rem;
+                background: rgba(255,255,255,0.16);
+                color: #ffffff;
+                font-weight: 500;
+                box-shadow: 0 0 0 1px rgba(255,255,255,0.24);
+            }
+
+            .cart-button-modern.ui-button:hover {
+                background: rgba(255,255,255,0.24);
+            }
+
+            footer {
+                background-color: #0f172a;
+            }
+
+            @keyframes fadeInUp {
+                from { opacity: 0; transform: translateY(12px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            @media (min-width: 768px) {
+                .hero-section {
+                    flex-direction: row;
+                    text-align: left;
+                    padding: 3.5rem 3rem;
+                }
+                .hero-content {
+                    flex: 1;
+                    padding-right: 2.5rem;
+                }
+                .hero-image {
+                    margin-top: 0;
+                    flex: 1;
+                }
+            }
+        </style>
+    </h:head>
+
+    <h:body>
+        <f:metadata>
+            <f:viewAction action="#{carritoBean.prepararSimulacionPublica}" />
+        </f:metadata>
+        <!-- HEADER -->
+        <header class="header text-white p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold">AgriviApp</h1>
+                <h:form id="navForm">
+                    <nav>
+                        <ul class="flex space-x-4 items-center">
+                            <li>
+                                <h:link outcome="login.xhtml" value="Iniciar Sesion" styleClass="nav-link" />
+                            </li>
+                            <li>
+                                <!-- Botón Mi Carrito más estilizado -->
+                                <p:commandButton type="button"
+                                                 value="Mi Carrito"
+                                                 styleClass="cart-button-modern"
+                                                 onclick="PF('cartDialog').show(); return false;">
+                                    <span class="cart-count">
+                                        <h:outputText value="#{empty carritoBean ? 0 : carritoBean.totalItems}" />
+                                    </span>
+                                </p:commandButton>
+                            </li>
+                            <li>
+                                <h:panelGroup rendered="#{!usuarioBean.autenticado}">
+                                    <p:commandLink value=""
+                                                   onclick="PF('loginDialog').show(); return false;"
+                                                   styleClass="nav-link" />
+                                </h:panelGroup>
+
+                                <h:panelGroup>
+                                    <span class="nav-link font-semibold">
+                                        Bienvenid@
+                                    </span>
+                                </h:panelGroup>
+                            </li>
+                        </ul>
+                    </nav>
+                </h:form>
+            </div>
+        </header>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="container mx-auto p-8">
+            <h:messages id="globalMessages"
+                        globalOnly="true"
+                        infoStyle="color: #097a3a; font-weight: bold;"
+                        warnStyle="color: orange;"
+                        errorStyle="color: red; font-weight: bold;" />
+
+            <!-- Sección Hero -->
+            <section class="hero-section">
+                <div class="hero-content">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">
+                        Productos Agrícolas de Calidad
+                    </h2>
+                    <p class="text-lg text-gray-600 mb-6">
+                        En AgriviApp nos dedicamos a ofrecer los mejores productos agrícolas directamente del campo a tu hogar. Calidad, frescura y sostenibilidad en cada compra.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <p:commandButton value="Ver Catálogo" 
+                                         onclick="document.getElementById('catalogo-section').scrollIntoView({behavior: 'smooth'});"
+                                         styleClass="btn-primary py-3 px-6 rounded-full font-medium" />
+                        <p:commandButton value="Conoce Más" 
+                                         onclick="document.getElementById('about-section').scrollIntoView({behavior: 'smooth'});"
+                                         styleClass="btn-secondary py-3 px-6 rounded-full font-medium" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Información de la Empresa -->
+            <section id="about-section" class="info-section">
+                <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Sobre AgriviApp</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-emerald-600 mb-4">Nuestra Misión</h3>
+                        <p class="text-gray-600 mb-6">
+                            Conectar a los agricultores locales con consumidores conscientes, ofreciendo productos frescos, de alta calidad y cultivados de manera sostenible. Creemos en un modelo de comercio justo que beneficie tanto a quienes producen como a quienes consumen.
+                        </p>
+
+                        <h3 class="text-xl font-semibold text-emerald-600 mb-4">Nuestra Visión</h3>
+                        <p class="text-gray-600 mb-6">
+                            Ser la plataforma líder en distribución de productos agrícolas en la región, promoviendo prácticas sostenibles y contribuyendo a la seguridad alimentaria de nuestras comunidades.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-emerald-600 mb-4">Nuestros Valores</h3>
+                        <ul class="text-gray-600 space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-leaf text-emerald-500 mt-1 mr-3"></i>
+                                <span><strong>Sostenibilidad:</strong> Promovemos prácticas agrícolas responsables con el medio ambiente.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-handshake text-emerald-500 mt-1 mr-3"></i>
+                                <span><strong>Comercio Justo:</strong> Garantizamos precios equitativos para nuestros productores.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-award text-emerald-500 mt-1 mr-3"></i>
+                                <span><strong>Calidad:</strong> Seleccionamos rigurosamente cada producto que ofrecemos.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-truck text-emerald-500 mt-1 mr-3"></i>
+                                <span><strong>Frescura:</strong> Entregamos los productos en el menor tiempo posible desde su cosecha.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Características -->
+            <section class="info-section">
+                <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">¿Por Qué Elegirnos?</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-3">
+                            Productos Frescos <span class="chip">Premium</span>
+                        </h3>
+                        <p class="text-gray-600">
+                            Trabajamos directamente con agricultores locales para garantizar la máxima frescura en cada producto.
+                        </p>
+                    </div>
+                    <div class="text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-tractor"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-3">
+                            Agricultura Sostenible <span class="chip">Eco</span>
+                        </h3>
+                        <p class="text-gray-600">
+                            Promovemos prácticas agrícolas responsables que cuidan el medio ambiente y las comunidades.
+                        </p>
+                    </div>
+                    <div class="text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-shipping-fast"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-3">
+                            Entrega Rápida <span class="chip">24/48h</span>
+                        </h3>
+                        <p class="text-gray-600">
+                            Recibe tus productos en la comodidad de tu hogar con nuestro servicio de entrega eficiente.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Catálogo -->
+            <section id="catalogo-section" class="mt-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">
+                    Nuestros Productos Agrícolas
+                </h2>
+
+                <h:form id="catalogoForm">
+                    <!-- Diálogo de Login/Registro -->
+                    <p:dialog header="Iniciar Sesión o Registrarse" widgetVar="loginDialog" modal="true" resizable="false" width="500">
+                        <div class="p-4">
+                            <p:tabView>
+                                <p:tab title="Iniciar Sesión">
+                                    <div class="space-y-4 mt-4">
+                                        <div class="field">
+                                            <label for="loginEmail" class="block text-gray-700 mb-2">Correo Electrónico</label>
+                                            <p:inputText id="loginEmail" value="#{usuarioBean.usuario.correo}" styleClass="w-full" />
+                                        </div>
+                                        <div class="field">
+                                            <label for="loginPassword" class="block text-gray-700 mb-2">Contraseña</label>
+                                            <p:password id="loginPassword" value="#{usuarioBean.usuario.password}" styleClass="w-full" />
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <p:commandButton value="Iniciar Sesión"
+                                                             action="#{usuarioBean.autenticar}"
+                                                             ajax="false"
+                                                             update=":navForm :globalMessages"
+                                                             oncomplete="if(!args.validationFailed) PF('loginDialog').hide();"
+                                                             styleClass="modern-btn" />
+                                        </div>
+                                    </div>
+                                </p:tab>
+                                <p class="mt-6 text-center text-sm text-gray-600">
+                                    ¿No tienes una cuenta?
+                                    <h:link outcome="register" value="Regístrate aquí"
+                                            styleClass="font-medium text-green-700 hover:text-green-900"/>
+                                </p>
+                            </p:tabView>
+                        </div>
+                    </p:dialog>
+
+                    <!-- Diálogo del carrito (simulación pública) -->
+                    <p:dialog header="Mi Carrito"
+                              widgetVar="cartDialog"
+                              modal="true"
+                              resizable="false"
+                              width="1200"
+                              closeOnEscape="true"
+                              styleClass="cart-dialog">
+                        <h:panelGroup id="cartPanel">
+                            <h:messages id="cartMessages"
+                                        globalOnly="true"
+                                        infoStyle="color: #097a3a; font-weight: bold;"
+                                        warnStyle="color: orange;"
+                                        errorStyle="color: red; font-weight: bold;"/>
+
+                            <h:panelGroup rendered="#{carritoBean.vacio}">
+                                <div class="text-center py-6">
+                                    <p class="text-lg text-gray-600">Tu carrito está vacío. Explora el catálogo para agregar productos.</p>
+                                </div>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{!carritoBean.vacio}">
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <div class="lg:col-span-2">
+                                        <div class="overflow-x-auto rounded-lg shadow bg-white">
+                                            <table class="min-w-full cart-table">
+                                                <thead class="bg-green-700 text-white">
+                                                    <tr>
+                                                        <th class="px-4 py-3 text-left">Producto</th>
+                                                        <th class="px-4 py-3 text-right">Precio Unitario</th>
+                                                        <th class="px-4 py-3 text-center">Cantidad</th>
+                                                        <th class="px-4 py-3 text-right">Subtotal</th>
+                                                        <th class="px-4 py-3 text-center">Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <ui:repeat value="#{carritoBean.items}" var="item">
+                                                        <tr class="border-b border-gray-100 bg-white">
+                                                            <td class="px-4 py-3 font-semibold text-green-700">#{item.producto.nombreProducto}</td>
+                                                            <td class="px-4 py-3 text-right">
+                                                                $<h:outputText value="#{item.producto.precioVenta}">
+                                                                    <f:convertNumber pattern="#,##0.00" />
+                                                                </h:outputText>
+                                                            </td>
+                                                            <td class="px-4 py-3 text-center">
+                                                                <div class="qty-control" style="margin: 0 auto;">
+                                                                    <p:commandButton value="-"
+                                                                                     title="Quitar una unidad"
+                                                                                     process="@this"
+                                                                                     actionListener="#{carritoBean.decrementarProducto(item.producto)}"
+                                                                                     update=":catalogoForm:cartPanel :navForm"
+                                                                                     disabled="#{item.cantidad le 1}"
+                                                                                     styleClass="qty-btn" />
+                                                                    <span class="qty-number">
+                                                                        <h:outputText value="#{item.cantidad}" />
+                                                                    </span>
+                                                                    <p:commandButton value="+"
+                                                                                     title="Agregar una unidad"
+                                                                                     process="@this"
+                                                                                     actionListener="#{carritoBean.incrementarProducto(item.producto)}"
+                                                                                     update=":catalogoForm:cartPanel :navForm"
+                                                                                     styleClass="qty-btn" />
+                                                                </div>
+                                                            </td>
+                                                            <td class="px-4 py-3 text-right font-semibold">
+                                                                $<h:outputText value="#{item.subtotal}">
+                                                                    <f:convertNumber pattern="#,##0.00" />
+                                                                </h:outputText>
+                                                            </td>
+                                                            <td class="px-4 py-3 text-center">
+                                                                <div class="flex justify-center space-x-2">
+                                                                    <p:commandButton value="Eliminar"
+                                                                                     action="#{carritoBean.eliminarItem(item)}"
+                                                                                     update=":catalogoForm:cartPanel :navForm"
+                                                                                     styleClass="modern-btn-secondary text-sm"
+                                                                                     style="background:#fee2e2; border-color:#fecaca; color:#b91c1c;" />
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </ui:repeat>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <div class="lg:col-span-1">
+                                        <div class="summary-card bg-white p-5">
+                                            <h3 class="text-xl font-bold mb-3">Resumen</h3>
+                                            <div class="flex justify-between mb-2">
+                                                <span>Productos:</span>
+                                                <span class="font-semibold">#{carritoBean.totalItems}</span>
+                                            </div>
+                                            <div class="flex justify-between text-lg font-semibold border-t pt-3 text-green-700">
+                                                <span>Total:</span>
+                                                <span>
+                                                    $<h:outputText value="#{carritoBean.totalCompra}">
+                                                        <f:convertNumber pattern="#,##0.00" />
+                                                    </h:outputText>
+                                                </span>
+                                            </div>
+
+                                            <h:panelGroup rendered="#{usuarioBean.autenticado}">
+                                                <p:commandButton value="Pagar"
+                                                                 action="carrito?faces-redirect=true"
+                                                                 styleClass="modern-btn w-full mt-4" />
+                                            </h:panelGroup>
+
+                                            <!-- Si NO está autenticado: mostrar diálogo para iniciar sesión -->
+                                            <h:panelGroup rendered="#{not usuarioBean.autenticado}">
+                                                <p:commandButton type="button"
+                                                                 value="Pagar"
+                                                                 onclick="PF('loginRequiredDialog').show(); return false;"
+                                                                 styleClass="modern-btn w-full mt-4"/>
+                                            </h:panelGroup>
+
+                                            <p:commandButton type="button"
+                                                             value="Seguir navegando"
+                                                             onclick="PF('cartDialog').hide()"
+                                                             styleClass="modern-btn-secondary w-full mt-2"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </h:panelGroup>
+                        </h:panelGroup>
+                    </p:dialog>
+
+                    <!-- Diálogo para seleccionar cantidad -->
+                    <p:dialog header="Seleccionar Cantidad" widgetVar="quantityDialog" modal="true" resizable="false">
+                        <div class="p-4">
+                            <p id="modalProductName">¿Cuántas unidades deseas agregar al carrito?</p>
+                            <p:inputNumber id="cantidadInput"
+                                           value="#{carritoBean.cantidadTemporal}"
+                                           minValue="1"
+                                           decimalPlaces="0"
+                                           styleClass="w-full mt-2" />
+                            <div class="flex justify-end mt-4 space-x-2">
+                                <p:commandButton value="Cancelar"
+                                                 onclick="PF('quantityDialog').hide()"
+                                                 styleClass="modern-btn-secondary" />
+                                <p:commandButton value="Agregar"
+                                                 action="#{carritoBean.agregarProductoModal}"
+                                                 update=":navForm :globalMessages :catalogoForm:cartPanel"
+                                                 oncomplete="PF('quantityDialog').hide()"
+                                                 styleClass="modern-btn" />
+                            </div>
+                        </div>
+                    </p:dialog>
+
+                    <!-- Diálogo para editar cantidad -->
+                    <p:dialog header="Editar Cantidad" widgetVar="editQuantityDialog" modal="true" resizable="false">
+                        <div class="p-4">
+                            <p id="editProductName">¿Cuántas unidades deseas?</p>
+                            <p:inputNumber id="editQuantityInput"
+                                           value="#{carritoBean.cantidadTemporal}"
+                                           minValue="1"
+                                           decimalPlaces="0"
+                                           styleClass="w-full mt-2" />
+                            <div class="flex justify-end mt-4 space-x-2">
+                                <p:commandButton value="Cancelar"
+                                                 onclick="PF('editQuantityDialog').hide()"
+                                                 styleClass="modern-btn-secondary" />
+                                <p:commandButton value="Actualizar"
+                                                 action="#{carritoBean.actualizarCantidad}"
+                                                 update=":catalogoForm:cartPanel :navForm"
+                                                 oncomplete="PF('editQuantityDialog').hide()"
+                                                 styleClass="modern-btn" />
+                            </div>
+                        </div>
+                    </p:dialog>
+
+                    <!-- Aviso de inicio de sesión para pago -->
+                    <p:dialog header="Inicia sesión para pagar" widgetVar="loginRequiredDialog" modal="true" resizable="false" width="480">
+                        <div class="p-4 space-y-4 text-center">
+                            <p class="text-lg text-gray-700">Para completar tu compra necesitas iniciar sesión.</p>
+                            <div class="flex justify-center space-x-3">
+                                <p:commandButton type="button"
+                                                 value="Iniciar sesión"
+                                                 onclick="window.location = 'login.xhtml';"
+                                                 styleClass="modern-btn" />
+                                <p:commandButton type="button"
+                                                 value="Seguir navegando"
+                                                 onclick="PF('loginRequiredDialog').hide(); PF('cartDialog').hide();"
+                                                 styleClass="modern-btn-secondary" />
+                            </div>
+                        </div>
+                    </p:dialog>
+
+                    <!-- Barra de filtros visual -->
+                    <div class="flex flex-wrap items-center justify-between mb-8 gap-4">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                                    <i class="fas fa-search text-xs"></i>
+                                </span>
+<!--                                <input type="text"
+                                       placeholder="Buscar producto..."
+                                       class="pl-8 pr-3 py-2 rounded-full border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />-->
+                            </div>
+
+                            <select class="text-sm rounded-full border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="">Todos los tipos</option>
+                                <option value="Fertilizante">Fertilizantes</option>
+                                <option value="Herbicida">Herbicidas</option>
+                                <option value="Fungicida">Fungicidas</option>
+                            </select>
+                        </div>
+
+                        <span class="text-xs md:text-sm text-gray-500">
+                            #{empty productoBean.listaProductos ? 0 : productoBean.listaProductos.size()} productos disponibles
+                        </span>
+                    </div>
+
+                    <!-- GRID DE PRODUCTOS -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <ui:repeat var="p" value="#{productoBean.listaProductos}">
+                            <div class="product-card">
+                                <span class="product-badge">Destacado</span>
+
+                                <div>
+                                    <div class="product-image bg-gray-100 flex items-center justify-center rounded">
+                                        <h:graphicImage
+                                            value="#{empty p.imagen 
+                                                     ? '/resources/images/products/default-product.jpg' 
+                                                     : '/resources/images/products/'.concat(p.imagen)}"
+                                            alt="Imagen no disponible" />
+                                    </div>
+
+                                    <p class="text-xs uppercase tracking-wide text-gray-400 mb-1">
+                                        #{p.tipo}
+                                    </p>
+                                    <h3 class="text-xl font-semibold text-gray-800">
+                                        #{p.nombreProducto}
+                                    </h3>
+                                    <p class="text-gray-600 mb-4">
+                                        #{p.descripcion}
+                                    </p>
+                                </div>
+
+                                <div class="mt-2">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <p class="text-2xl font-bold text-emerald-600">
+                                            $
+                                            <h:outputText value="#{p.precioVenta}">
+                                                <f:convertNumber pattern="#,##0.00" />
+                                            </h:outputText>
+                                        </p>
+                                        <span class="badge-stock">
+                                            Stock: #{p.stock}
+                                        </span>
+                                    </div>
+
+                                    <!-- Control de cantidad + / - -->
+                                    <div class="flex items-center justify-between mt-3">
+                                        <div class="qty-control">
+                                            <p:commandButton value="-"
+                                                             title="Quitar una unidad"
+                                                             process="@this"
+                                                             actionListener="#{carritoBean.decrementarProducto(p)}"
+                                                             update=":catalogoForm :navForm"
+                                                             disabled="#{carritoBean.obtenerCantidadProducto(p) le 0}"
+                                                             styleClass="qty-btn" />
+                                            <span class="qty-number">
+                                                <h:outputText value="#{carritoBean.obtenerCantidadProducto(p)}" />
+                                            </span>
+                                            <p:commandButton value="+"
+                                                             title="Agregar una unidad"
+                                                             process="@this"
+                                                             actionListener="#{carritoBean.incrementarProducto(p)}"
+                                                             update=":catalogoForm :navForm"
+                                                             styleClass="qty-btn" />
+                                        </div>
+
+                                        <!-- Botón original que abre el modal de cantidad -->
+                                        <p:commandButton value="Agregar al Carrito"
+                                                         action="#{carritoBean.prepararAgregarProducto(p)}"
+                                                         oncomplete="document.getElementById('modalProductName').textContent = '¿Cuántas unidades de #{p.nombreProducto} deseas agregar?'; PF('quantityDialog').show();"
+                                                         styleClass="btn-primary px-4 py-2 rounded-full text-sm font-semibold ml-3" />
+                                    </div>
+                                </div>
+                            </div>
+                        </ui:repeat>
+
+                        <h:panelGroup rendered="#{empty productoBean.listaProductos}">
+                            <p class="text-center text-gray-600 text-lg col-span-full">
+                                No hay productos disponibles en este momento.
+                            </p>
+                        </h:panelGroup>
+                    </div>
+                </h:form>
+            </section>
+        </main>
+
+        <footer class="bg-gray-800 text-white p-8 mt-12">
+            <div class="container mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">AgriviApp</h3>
+                        <p class="text-gray-300">
+                            Conectando agricultores y consumidores con productos frescos y sostenibles.
+                        </p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">Enlaces Rápidos</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#about-section" class="text-gray-300 hover:text-white">Sobre Nosotros</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">Contacto</h4>
+                        <ul class="space-y-2 text-gray-300">
+                            <li class="flex items-center">
+                                <i class="fas fa-map-marker-alt mr-2"></i>
+                                <span>Av. Agricultura 123, Ciudad</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-phone mr-2"></i>
+                                <span>+1 234 567 890</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-envelope mr-2"></i>
+                                <span>info@agriviapp.com</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">Síguenos</h4>
+                        <div class="flex space-x-4">
+                            <a href="#" class="text-gray-300 hover:text-white">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="text-gray-300 hover:text-white">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="text-gray-300 hover:text-white">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+                    <p>&#169; 2025 AgriviApp. Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </footer>
+    </h:body>
+</html>

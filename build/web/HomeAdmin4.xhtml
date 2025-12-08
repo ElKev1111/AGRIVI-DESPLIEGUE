@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      lang="es">
+
+    <h:head>
+        <title>Gestión de Ventas - AgriviApp</title>
+
+        <!-- Tailwind + Bootstrap Icons -->
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+
+        <!-- Bootstrap y FontAwesome -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+        <style>
+            :root {
+                --agrivi-navy: #4F5E8C;
+                --agrivi-green: #17A649;
+                --agrivi-dark-green: #16592E;
+                --agrivi-cream: #F2EFDF;
+                --agrivi-sand: #D9A273;
+                --agrivi-light-green: rgba(23, 166, 73, 0.1);
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Inter', sans-serif;
+                background: linear-gradient(135deg, var(--agrivi-cream), #d7f0ff);
+                margin: 0;
+            }
+
+            /* SIDEBAR */
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 250px;
+                background: linear-gradient(180deg, var(--agrivi-dark-green), var(--agrivi-navy));
+                color: white;
+                z-index: 1000;
+                overflow-y: auto;
+                box-shadow: 4px 0 20px rgba(22, 89, 46, 0.2);
+            }
+
+            .sidebar-header {
+                padding: 2rem 1.5rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+                text-align: center;
+            }
+
+            .sidebar-header h4 {
+                margin: 0 0 0.5rem 0;
+                font-weight: 700;
+                font-size: 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+
+            .sidebar-header p {
+                margin: 0;
+                opacity: 0.9;
+                font-size: 0.875rem;
+            }
+
+            .sidebar-nav .nav-link {
+                display: flex;
+                align-items: center;
+                padding: 12px 20px;
+                color: rgba(255, 255, 255, 0.85);
+                text-decoration: none;
+                transition: all 0.2s ease;
+                border-left: 3px solid transparent;
+                font-size: 0.95rem;
+            }
+
+            .sidebar-nav .nav-link:hover {
+                background: rgba(255, 255, 255, 0.12);
+                color: white;
+                border-left-color: rgba(255, 255, 255, 0.3);
+            }
+
+            .sidebar-nav .nav-link.active {
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                border-left-color: #ffd700;
+                font-weight: 600;
+            }
+
+            .sidebar-nav .nav-link i {
+                margin-right: 12px;
+                width: 20px;
+                text-align: center;
+            }
+
+            .sidebar-footer {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 1.5rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.15);
+            }
+
+            .sidebar-footer .btn-logout {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 0.75rem;
+                border-radius: 0.5rem;
+                transition: all 0.2s ease;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                text-decoration: none;
+                font-size: 0.9rem;
+            }
+
+            .sidebar-footer .btn-logout:hover {
+                background: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.5);
+            }
+
+            /* MAIN CONTENT */
+            .main-content {
+                margin-left: 250px;
+                padding: 2rem;
+                min-height: 100vh;
+            }
+
+            .top-bar {
+                background: white;
+                padding: 1.5rem 2rem;
+                border-radius: 1rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                margin-bottom: 2rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .top-bar h2 {
+                margin: 0;
+                color: #1f2937;
+                font-weight: 700;
+                font-size: 1.75rem;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+            .top-bar h2 i {
+                color: var(--agrivi-green);
+            }
+
+            .user-info {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .user-info span {
+                color: #6b7280;
+                font-size: 0.95rem;
+            }
+            .user-info strong {
+                color: #1f2937;
+            }
+
+            .btn-outline-primary {
+                background: transparent;
+                border: 2px solid var(--agrivi-green);
+                color: var(--agrivi-green);
+                padding: 0.5rem 1rem;
+                border-radius: 9999px;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 0.875rem;
+            }
+
+            .btn-outline-primary:hover {
+                background: var(--agrivi-green);
+                color: white;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(23, 166, 73, 0.3);
+            }
+
+            /* TABLE CONTAINER */
+            .table-container {
+                background: white;
+                border-radius: 1rem;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+                padding: 2rem;
+            }
+
+            .table-title {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #1f2937;
+                margin-bottom: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding-bottom: 0.75rem;
+                border-bottom: 2px solid #e5e7eb;
+            }
+
+            /* Estilos para la tabla PrimeFaces */
+            .ui-datatable {
+                border-radius: 0.75rem;
+                overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            }
+
+            .ui-datatable thead th {
+                background: linear-gradient(135deg, #f8fafc, #e2e8f0) !important;
+                color: #1f2937 !important;
+                font-weight: 600 !important;
+                border-bottom: 2px solid var(--agrivi-green) !important;
+                padding: 1rem !important;
+                font-size: 0.875rem;
+            }
+
+            .ui-datatable tbody td {
+                padding: 0.875rem 1rem !important;
+                border-bottom: 1px solid #e5e7eb !important;
+                font-size: 0.875rem;
+            }
+
+            .ui-datatable tbody tr:hover {
+                background-color: #f8fafc !important;
+            }
+
+            /* DIALOG STYLES */
+            .ui-dialog {
+                border-radius: 1rem !important;
+                overflow: hidden !important;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+            }
+
+            .ui-dialog-titlebar {
+                background: linear-gradient(135deg, var(--agrivi-green), var(--agrivi-dark-green)) !important;
+                color: white !important;
+                border: none !important;
+                padding: 1.25rem 1.5rem !important;
+                font-weight: 600 !important;
+            }
+
+            .ui-dialog-content {
+                padding: 1.5rem !important;
+            }
+
+            /* RESPONSIVE */
+            @media (max-width: 1024px) {
+                .sidebar {
+                    width: 220px;
+                }
+                .main-content {
+                    margin-left: 220px;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                }
+                .main-content {
+                    margin-left: 0;
+                    padding: 1rem;
+                }
+                .top-bar {
+                    flex-direction: column;
+                    gap: 1rem;
+                    text-align: center;
+                }
+                .table-container {
+                    padding: 1.5rem;
+                }
+                .ui-dialog {
+                    width: 95% !important;
+                    max-width: 95% !important;
+                }
+            }
+        </style>
+    </h:head>
+
+    <h:body>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h4><i class="bi bi-flower1"></i> Agrivi</h4>
+                <p>Panel Admin</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <h:link outcome="/HomeAdmin1.xhtml" styleClass="nav-link">
+                    <i class="bi bi-graph-up"></i> Dashboard
+                </h:link>
+                <h:link outcome="/HomeAdmin2.xhtml" styleClass="nav-link">
+                    <i class="bi bi-people-fill"></i> Usuarios
+                </h:link>
+                <h:link outcome="/HomeAdmin3.xhtml" styleClass="nav-link">
+                    <i class="bi bi-box-seam"></i> Productos
+                </h:link>
+                <h:link outcome="/Correos.xhtml" styleClass="nav-link">
+                    <i class="bi bi-envelope-fill"></i> Correos
+                </h:link>
+                <h:link outcome="/HomeAdmin4.xhtml" styleClass="nav-link active">
+                    <i class="bi bi-cart-check-fill"></i> Ventas
+                </h:link>
+                <h:link outcome="/HomeAdmin5.xhtml" styleClass="nav-link">
+                    <i class="bi bi-person-badge-fill"></i> Empleados
+                </h:link>
+                <h:link outcome="/MovInventario.xhtml" styleClass="nav-link">
+                    <i class="bi bi-boxes"></i> Inventario
+                </h:link>
+                <h:link outcome="/PedidosProveedores.xhtml" styleClass="nav-link">
+                    <i class="bi bi-truck"></i> Pedidos
+                </h:link>
+                <h:link outcome="/dashboardProveedores.xhtml" styleClass="nav-link">
+                    <i class="bi bi-building"></i> Vista Proveedores
+                </h:link>
+                <h:link outcome="/dashboardPresentacion.xhtml" styleClass="nav-link">
+                    <i class="bi bi-easel"></i> Presentación
+                </h:link>
+            </nav>
+
+            <h:form>
+                <div class="sidebar-footer">
+                    <h:commandLink action="#{usuarioBean.logout()}" styleClass="btn-logout">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                    </h:commandLink>
+                </div>
+            </h:form>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+
+            <div class="top-bar">
+                <h2>
+                    <i class="bi bi-cart-check-fill"></i>
+                    Gestión de Ventas
+                </h2>
+                <div class="user-info">
+                    <span>
+                        Bienvenido, <strong>#{usuarioBean.usuario.nombre}</strong>
+                    </span>
+                    <h:link outcome="/perfil.xhtml" styleClass="btn-outline-primary">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Mi Perfil</span>
+                    </h:link>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-title">
+                    <i class="bi bi-receipt"></i>
+                    Historial de Ventas
+                </div>
+
+                <h:form id="ventasForm">
+
+                    <!-- Encabezado + filtro global + export -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-800">Historial de Ventas</h2>
+                            <p class="text-xs text-gray-500">
+                                Cada fila representa una compra completa (un código de compra).
+                            </p>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+
+                            <!-- Filtro global -->
+                            <p:inputText id="globalFilter"
+                                         placeholder="Buscar por código, cliente, correo..."
+                                         styleClass="p-inputtext-sm"
+                                         onkeyup="PF('tablaVentas').filter()" />
+
+
+
+                            <!-- PDF -->
+                            <p:commandButton value="PDF"
+                                             icon="pi pi-file-pdf"
+                                             ajax="false"
+                                             process="@this"
+                                             styleClass="p-button-rounded p-button-sm p-button-danger">
+                                <p:dataExporter type="pdf"
+                                                target="tblVentas"
+                                                fileName="ventas_agrupadas"/>
+                            </p:commandButton>
+
+
+                        </div>
+                    </div>
+
+                    <!-- TABLA AGRUPADA -->
+                    <p:dataTable id="tblVentas"
+                                 value="#{ventasBean.listaVentasAgrupadas}"
+                                 var="v"
+                                 styleClass="table table-hover"
+                                 paginator="false"
+                                 rows="10000"
+                                 widgetVar="tablaVentas"
+                                 filterDelay="300"
+                                 paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                 rowsPerPageTemplate="5,10,15,20"
+                                 sortBy="#{v.fechaVenta}"
+                                 sortOrder="descending"
+                                 emptyMessage="No hay ventas registradas">
+
+                        <!-- Código -->
+                        <p:column headerText="Código compra"
+                                  sortBy="#{v.codigoGrupo}"
+                                  filterBy="#{v.codigoGrupo}"
+                                  filterMatchMode="contains"
+                                  style="width: 180px; text-align:center;">
+                            <span class="font-mono text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
+                                #{v.codigoGrupo}
+                            </span>
+                        </p:column>
+
+                        <!-- Fecha (evitamos convertDateTime para no chocar con java.time en JSF 2.2) -->
+                        <p:column headerText="Fecha"
+                                  sortBy="#{v.fechaVenta}"
+                                  filterBy="#{v.fechaVenta}"
+                                  filterMatchMode="contains"
+                                  style="width: 180px; text-align:center;">
+                            <h:outputText value="#{v.fechaVenta}" />
+                        </p:column>
+
+                        <!-- Cliente -->
+                        <p:column headerText="Cliente"
+                                  sortBy="#{v.nombreUsuario}"
+                                  filterBy="#{v.nombreUsuario}"
+                                  filterMatchMode="contains">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-gray-800">
+                                    #{v.nombreUsuario}
+                                </span>
+                                <span class="text-xs text-gray-500">
+                                    #{v.correoUsuario}
+                                </span>
+                            </div>
+                        </p:column>
+
+                        <!-- Items -->
+                        <p:column headerText="Items"
+                                  style="width: 90px; text-align:center;"
+                                  filterBy="#{v.totalItems}"
+                                  filterMatchMode="equals">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 text-sm font-semibold">
+                                #{v.totalItems}
+                            </span>
+                        </p:column>
+
+                        <!-- Líneas -->
+                        <p:column headerText="Líneas"
+                                  style="width: 90px; text-align:center;"
+                                  filterBy="#{v.totalLineas}"
+                                  filterMatchMode="equals">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
+                                #{v.totalLineas}
+                            </span>
+                        </p:column>
+
+                        <!-- Total sin IVA -->
+                        <p:column headerText="Total (sin IVA)"
+                                  sortBy="#{v.totalPagar}"
+                                  filterBy="#{v.totalPagar}"
+                                  filterMatchMode="contains"
+                                  style="width: 160px; text-align:right;">
+                            <span class="font-semibold text-green-600">
+                                $<h:outputText value="#{v.totalPagar}">
+                                    <f:convertNumber type="number" pattern="#,##0.00"/>
+                                </h:outputText>
+                            </span>
+                        </p:column>
+
+                        <!-- Acción -->
+                        <p:column headerText="Acciones"
+                                  style="width: 150px; text-align:center;">
+                            <p:commandButton value="Ver resumen"
+                                             icon="pi pi-eye"
+                                             styleClass="p-button-sm p-button-outlined p-button-primary"
+                                             process="@this"
+                                             actionListener="#{ventasBean.seleccionarVentaAgrupada(v)}"
+                                             update=":ventasForm:dlgResumen"
+                                             oncomplete="PF('dlgResumenVenta').show()" />
+                        </p:column>
+                    </p:dataTable>
+
+                    <!-- ====================== DIALOG RESUMEN ====================== -->
+                    <p:dialog id="dlgResumen"
+                              widgetVar="dlgResumenVenta"
+                              header="Detalle de la venta"
+                              modal="true"
+                              responsive="true"
+                              closable="true"
+                              resizable="false"
+                              width="820">
+
+                        <h:panelGroup rendered="#{not empty ventasBean.ventaAgrupadaSeleccionada}">
+
+                            <!-- Cabecera -->
+                            <div class="mb-4 border-b pb-3">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <div class="text-xs text-gray-500">Código de compra</div>
+                                        <div class="font-mono text-sm text-blue-700">
+                                            #{ventasBean.ventaAgrupadaSeleccionada.codigoGrupo}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-xs text-gray-500">Fecha</div>
+                                        <div class="text-sm text-gray-800">
+                                            <h:outputText value="#{ventasBean.ventaAgrupadaSeleccionada.fechaVenta}" />
+                                        </div>
+                                    </div>
+
+                                    <div class="text-right">
+                                        <div class="text-xs text-gray-500">Cliente</div>
+                                        <div class="text-sm font-semibold text-gray-800">
+                                            #{ventasBean.ventaAgrupadaSeleccionada.nombreUsuario}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            #{ventasBean.ventaAgrupadaSeleccionada.correoUsuario}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Productos -->
+                            <div class="mb-4">
+                                <table class="min-w-full text-xs">
+                                    <thead>
+                                        <tr class="bg-gray-50 text-gray-600">
+                                            <th class="px-2 py-1 text-left">Producto</th>
+                                            <th class="px-2 py-1 text-center">Imagen</th>
+                                            <th class="px-2 py-1 text-center">Cantidad</th>
+                                            <th class="px-2 py-1 text-right">Precio unitario</th>
+                                            <th class="px-2 py-1 text-right">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <ui:repeat value="#{ventasBean.detallesVenta}" var="d">
+                                            <tr class="border-b">
+                                                <td class="px-2 py-1">
+                                                    <span class="font-medium text-gray-800">
+                                                        #{d.producto.nombreProducto}
+                                                    </span>
+                                                </td>
+                                                <td class="px-2 py-1 text-center">
+                                                    <!-- Ajusta ruta si tu carpeta real cambia -->
+                                                    <p:graphicImage value="/resources/images/products/#{d.producto.imagen}"
+                                                                    rendered="#{not empty d.producto and not empty d.producto.imagen}"
+                                                                    style="height:40px;width:40px;object-fit:cover;border-radius:0.5rem"/>
+                                                    <h:outputText value="—"
+                                                                  rendered="#{empty d.producto or empty d.producto.imagen}" />
+                                                </td>
+                                                <td class="px-2 py-1 text-center">
+                                                    #{d.cantidad}
+                                                </td>
+                                                <td class="px-2 py-1 text-right">
+                                                    $<h:outputText value="#{d.producto.precioProducto}">
+                                                        <f:convertNumber type="number" pattern="#,##0.00"/>
+                                                    </h:outputText>
+                                                </td>
+                                                <td class="px-2 py-1 text-right">
+                                                    $<h:outputText value="#{d.totalPagar}">
+                                                        <f:convertNumber type="number" pattern="#,##0.00"/>
+                                                    </h:outputText>
+                                                </td>
+                                            </tr>
+                                        </ui:repeat>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Totales de compra AGRUPADA -->
+                            <div class="flex justify-end space-x-8 mt-4">
+                                <div class="text-right">
+                                    <div class="text-xs text-gray-500">Subtotal</div>
+                                    <div class="font-semibold">
+                                        $<h:outputText value="#{ventasBean.subtotalCompraSeleccionada}">
+                                            <f:convertNumber type="number" pattern="#,##0.00"/>
+                                        </h:outputText>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-gray-500">IVA (1.5%)</div>
+                                    <div class="font-semibold">
+                                        $<h:outputText value="#{ventasBean.ivaCompraSeleccionada}">
+                                            <f:convertNumber type="number" pattern="#,##0.00"/>
+                                        </h:outputText>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-gray-500">Total con IVA</div>
+                                    <div class="font-bold text-green-600">
+                                        $<h:outputText value="#{ventasBean.totalConIvaCompraSeleccionada}">
+                                            <f:convertNumber type="number" pattern="#,##0.00"/>
+                                        </h:outputText>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </h:panelGroup>
+
+                        <h:panelGroup rendered="#{empty ventasBean.ventaAgrupadaSeleccionada}">
+                            <p class="text-sm text-gray-500">
+                                No hay venta seleccionada.
+                            </p>
+                        </h:panelGroup>
+                    </p:dialog>
+
+                </h:form>
+            </div>
+        </div>
+
+    </h:body>
+</html>
