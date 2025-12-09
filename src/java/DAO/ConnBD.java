@@ -5,11 +5,12 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class ConnBD {
-    private static final String URL = "jdbc:mysql://interchange.proxy.rlwy.net:27992/agrivijsf3?useSSL=false";
+
+    private static final String URL = "jdbc:mysql://yamanote.proxy.rlwy.net:38385/agrivijsf3?useSSL=false";
     private static final String USER = "root";
-    private static final String PASSWORD = "eGivZCmrGqPGutcDfpGWTxTjDKqDhgCo";
+    private static final String PASSWORD = "jWnIXKqHDwlFMKavWgldkmqWnMIBoXkI";
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
-    
+
     static {
         try {
             Class.forName(DRIVER);
@@ -17,7 +18,7 @@ public class ConnBD {
             e.printStackTrace();
         }
     }
-    
+
     public static Connection getConnection() {
         Connection conexion = null;
         try {
@@ -27,7 +28,7 @@ public class ConnBD {
         }
         return conexion;
     }
-    
+
     public static void closeConnection(Connection conexion) {
         if (conexion != null) {
             try {

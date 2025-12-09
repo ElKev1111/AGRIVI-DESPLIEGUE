@@ -7,10 +7,10 @@ import java.sql.SQLException;
 public class Conexion {
 
     // URL de la base de datos (con usuario y SSL deshabilitado)
-    private static final String URL = "jdbc:mysql://interchange.proxy.rlwy.net:27992/agrivijsf3?useSSL=false";
+    private static final String URL = "jdbc:mysql://yamanote.proxy.rlwy.net:38385/agrivijsf3?useSSL=false";
     private static final String USUARIO = "root";
-    private static final String PASSWORD = "eGivZCmrGqPGutcDfpGWTxTjDKqDhgCo";
-
+    private static final String PASSWORD = "jWnIXKqHDwlFMKavWgldkmqWnMIBoXkI";
+    
     public static Connection conectar() throws SQLException {
         Connection conn = null;
 
