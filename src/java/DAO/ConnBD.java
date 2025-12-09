@@ -5,9 +5,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class ConnBD {
-    private static final String URL = "jdbc:mysql://localhost:3306/agrivijsf3";
+    private static final String URL = "jdbc:mysql://interchange.proxy.rlwy.net:27992/agrivijsf3?useSSL=false";
     private static final String USER = "root";
-    private static final String PASSWORD = "";
+    private static final String PASSWORD = "eGivZCmrGqPGutcDfpGWTxTjDKqDhgCo";
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
     
     static {
