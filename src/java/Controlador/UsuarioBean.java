@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Properties;
+//import java.util.Properties;
 import java.security.SecureRandom;
 
 import java.nio.file.Files;
@@ -33,7 +33,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 
 import javax.mail.Message;
-import javax.mail.PasswordAuthentication;
+//import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
@@ -553,55 +553,91 @@ public class UsuarioBean implements Serializable {
     public void enviarNuevaContrasena() {
         FacesContext context = FacesContext.getCurrentInstance();
 
+        System.out.println("🟦 [RECUPERACION] Click en Enviar Nueva Contraseña");
+        System.out.println("🟦 [RECUPERACION] Correo ingresado: " + correoRecuperacion);
+
         if (correoRecuperacion == null || correoRecuperacion.trim().isEmpty()) {
             context.addMessage(null, new FacesMessage(
                     FacesMessage.SEVERITY_WARN,
                     "Atención",
-                    "Debes ingresar un correo."));
+                    "Debes ingresar un correo."
+            ));
             return;
         }
+
+        String correoIngresado = correoRecuperacion.trim();
 
         try (Connection con = Conexion.conectar()) {
 
             String sql = "SELECT id, nombre, correo FROM usuario WHERE correo = ?";
-            PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, correoRecuperacion.trim());
-            ResultSet rs = ps.executeQuery();
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                ps.setString(1, correoIngresado);
 
-            if (!rs.next()) {
-                context.addMessage(null, new FacesMessage(
-                        FacesMessage.SEVERITY_WARN,
-                        "Correo no encontrado",
-                        "No existe un usuario registrado con ese correo."));
-                return;
-            }
+                try (ResultSet rs = ps.executeQuery()) {
 
-            int idUsuario = rs.getInt("id");
-            String nombreUsuario = rs.getString("nombre");
-            String correoBD = rs.getString("correo");
+                    if (!rs.next()) {
+                        System.out.println("🟨 [RECUPERACION] Correo NO encontrado en BD: " + correoIngresado);
+                        context.addMessage(null, new FacesMessage(
+                                FacesMessage.SEVERITY_WARN,
+                                "Correo no encontrado",
+                                "No existe un usuario registrado con ese correo."
+                        ));
+                        return;
+                    }
 
-            String nuevaPasswordPlano = generarContrasenaTemporal(8);
-            String nuevaPasswordEncriptada = CifradoAES.encriptar(nuevaPasswordPlano);
+                    int idUsuario = rs.getInt("id");
+                    String nombreUsuario = rs.getString("nombre");
+                    String correoBD = rs.getString("correo");
 
-            String sqlUpdate = "UPDATE usuario SET password = ? WHERE id = ?";
-            PreparedStatement ps2 = con.prepareStatement(sqlUpdate);
-            ps2.setString(1, nuevaPasswordEncriptada);
-            ps2.setInt(2, idUsuario);
-            ps2.executeUpdate();
+                    System.out.println("🟩 [RECUPERACION] Usuario encontrado: id=" + idUsuario
+                            + ", nombre=" + nombreUsuario + ", correoBD=" + correoBD);
 
-            boolean enviado = enviarCorreoRecuperacion(correoBD, nombreUsuario, nuevaPasswordPlano);
+                    // 1) Generar nueva contraseña temporal
+                    String nuevaPasswordPlano = generarContrasenaTemporal(8);
 
-            if (enviado) {
-                context.addMessage(null, new FacesMessage(
-                        FacesMessage.SEVERITY_INFO,
-                        "Correo enviado",
-                        "Se ha enviado una nueva contraseña temporal a tu correo."));
-                correoRecuperacion = null;
-            } else {
-                context.addMessage(null, new FacesMessage(
-                        FacesMessage.SEVERITY_ERROR,
-                        "Error",
-                        "No se pudo enviar el correo. Intenta más tarde o contacta al administrador."));
+                    // 2) Encriptar igual que en tu flujo de login
+                    String nuevaPasswordEncriptada = CifradoAES.encriptar(nuevaPasswordPlano);
+
+                    // 3) Actualizar en BD
+                    String sqlUpdate = "UPDATE usuario SET password = ? WHERE id = ?";
+                    try (PreparedStatement ps2 = con.prepareStatement(sqlUpdate)) {
+                        ps2.setString(1, nuevaPasswordEncriptada);
+                        ps2.setInt(2, idUsuario);
+
+                        int filas = ps2.executeUpdate();
+                        System.out.println("🟩 [RECUPERACION] Filas actualizadas: " + filas);
+
+                        if (filas == 0) {
+                            context.addMessage(null, new FacesMessage(
+                                    FacesMessage.SEVERITY_ERROR,
+                                    "Error",
+                                    "No se pudo actualizar la contraseña en la base de datos."
+                            ));
+                            return;
+                        }
+                    }
+
+                    System.out.println("🟩 [RECUPERACION] Password actualizada en BD para id=" + idUsuario);
+
+                    // 4) Enviar correo con contraseña temporal en texto plano
+                    boolean enviado = enviarCorreoRecuperacion(correoBD, nombreUsuario, nuevaPasswordPlano);
+                    System.out.println("🟦 [RECUPERACION] Resultado envío correo: " + enviado);
+
+                    if (enviado) {
+                        context.addMessage(null, new FacesMessage(
+                                FacesMessage.SEVERITY_INFO,
+                                "Correo enviado",
+                                "Se ha enviado una nueva contraseña temporal a tu correo."
+                        ));
+                        correoRecuperacion = null;
+                    } else {
+                        context.addMessage(null, new FacesMessage(
+                                FacesMessage.SEVERITY_ERROR,
+                                "Error",
+                                "No se pudo enviar el correo. Intenta más tarde o contacta al administrador."
+                        ));
+                    }
+                }
             }
 
         } catch (Exception e) {
@@ -609,7 +645,8 @@ public class UsuarioBean implements Serializable {
             context.addMessage(null, new FacesMessage(
                     FacesMessage.SEVERITY_ERROR,
                     "Error interno",
-                    "Ocurrió un error al procesar la recuperación de contraseña."));
+                    "Ocurrió un error al procesar la recuperación de contraseña."
+            ));
         }
     }
 
@@ -617,26 +654,44 @@ public class UsuarioBean implements Serializable {
             String nombreUsuario,
             String nuevaPassword) {
         try {
-            // Mantén los mismos valores reales que ya tienes en tu proyecto
-            final String user = "TU_CORREO_GMAIL";
-            final String pass = "TU_APP_PASSWORD";
+            // --------------------------------------------------------------------
+            // ✅ ELIMINADO (hardcode):
+            // final String user = "TU_CORREO_GMAIL";
+            // final String pass = "TU_APP_PASSWORD";
+            //
+            // ✅ ELIMINADO (Gmail fijo):
+            // Properties props = new Properties();
+            // props.put("mail.smtp.auth", "true");
+            // props.put("mail.smtp.starttls.enable", "true");
+            // props.put("mail.smtp.host", "smtp.gmail.com");
+            // props.put("mail.smtp.port", "587");
+            // props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+            //
+            // ✅ ELIMINADO:
+            // Session sesion = Session.getInstance(props, new javax.mail.Authenticator() {
+            //     @Override
+            //     protected PasswordAuthentication getPasswordAuthentication() {
+            //         return new PasswordAuthentication(user, pass);
+            //     }
+            // });
+            //
+            // ✅ REEMPLAZADO POR:
+            // Sesión dinámica por variables de entorno (local/prod)
+            // --------------------------------------------------------------------
 
-            Properties props = new Properties();
-            props.put("mail.smtp.auth", "true");
-            props.put("mail.smtp.starttls.enable", "true");
-            props.put("mail.smtp.host", "smtp.gmail.com");
-            props.put("mail.smtp.port", "587");
-            props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+            Session sesion = MailSessionFactory.createSession();
+            String from = MailSessionFactory.getFrom();
+            System.out.println("🟦 [MAIL-RECUPERACION] FROM detectado: " + from);
 
-            Session sesion = Session.getInstance(props, new javax.mail.Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(user, pass);
-                }
-            });
+            // Validación para evitar fallos silenciosos
+            if (from == null || from.trim().isEmpty()) {
+                System.err.println("❌ Configuración de correo no encontrada. "
+                        + "Define MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS y MAIL_FROM.");
+                return false;
+            }
 
             MimeMessage mensaje = new MimeMessage(sesion);
-            mensaje.setFrom(new InternetAddress(user, "AgriviApp"));
+            mensaje.setFrom(new InternetAddress(from, "AgriviApp"));
             mensaje.setRecipient(Message.RecipientType.TO, new InternetAddress(correoDestino));
             mensaje.setSubject("Recuperación de contraseña - AgriviApp", "UTF-8");
 
@@ -655,7 +710,8 @@ public class UsuarioBean implements Serializable {
             return true;
 
         } catch (Exception e) {
-            System.err.println("❌ ERROR al enviar correo de recuperación a " + correoDestino + ": " + e.getMessage());
+            System.err.println("❌ ERROR al enviar correo de recuperación a "
+                    + correoDestino + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }

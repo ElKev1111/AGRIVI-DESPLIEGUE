@@ -11,15 +11,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
-import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
@@ -27,10 +24,13 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import org.primefaces.model.file.UploadedFile;
+import java.io.Serializable;
 
-@ManagedBean
+@ManagedBean(name = "correoBean")
 @ViewScoped
-public class CorreoBean {
+public class CorreoBean implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private String asunto;
     private String contmensaje;
@@ -38,7 +38,7 @@ public class CorreoBean {
     private List<Usuario> listaUsr;
 
     // Archivo adjunto opcional
-    private UploadedFile archivoAdjunto;
+    private transient UploadedFile archivoAdjunto;
 
     // IVA usado para el cálculo del total en el correo de factura (1.5%)
     private static final double IVA_PORCENTAJE = 0.015;
@@ -48,8 +48,8 @@ public class CorreoBean {
         listaUsr = new ArrayList<>();
     }
 
-    // ---------------- LÓGICA DE USUARIOS ----------------
 
+    // ---------------- LÓGICA DE USUARIOS ----------------
     public void listarUsuarios() {
         listaUsr = new ArrayList<>();
 
@@ -74,9 +74,8 @@ public class CorreoBean {
     }
 
     // ---------------- ENVÍO DE CORREO GENERAL ----------------
-
     public void enviarCorreo() {
-        // Validaciones
+        // ---------------- VALIDACIONES ----------------
         if (dest == null || dest.isEmpty()) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_WARN,
@@ -101,24 +100,43 @@ public class CorreoBean {
             return;
         }
 
-        final String user = "kalvinalonzo@gmail.com";
-        final String pass = "fjre wsvh lsbn exyw";
+        // --------------------------------------------------------------------
+        // ✅ ELIMINADO:
+        // final String user = "...";
+        // final String pass = "...";
+        //
+        // ✅ ELIMINADO:
+        // Properties props = new Properties();
+        // props.put("mail.smtp.auth", "true");
+        // props.put("mail.smtp.starttls.enable", "true");
+        // props.put("mail.smtp.host", "smtp.gmail.com");
+        // props.put("mail.smtp.port", "587");
+        // props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+        //
+        // ✅ ELIMINADO:
+        // Session sesion = Session.getInstance(props, new Authenticator() {
+        //     @Override
+        //     protected PasswordAuthentication getPasswordAuthentication() {
+        //         return new PasswordAuthentication(user, pass);
+        //     }
+        // });
+        //
+        // ✅ REEMPLAZADO POR:
+        // Usar configuración dinámica por variables de entorno
+        // (en local puede ser Gmail; en Render será SendGrid u otro proveedor)
+        // --------------------------------------------------------------------
+        Session sesion = MailSessionFactory.createSession();
+        String from = MailSessionFactory.getFrom();
 
-        // Config SMTP
-        Properties props = new Properties();
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.host", "smtp.gmail.com");
-        props.put("mail.smtp.port", "587");
-        // confiar en smtp.gmail.com (para evitar el error de TLS)
-        props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
-
-        Session sesion = Session.getInstance(props, new Authenticator() {
-            @Override
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(user, pass);
-            }
-        });
+        // Validación extra para evitar errores silenciosos si no configuraste ENV
+        if (from == null || from.trim().isEmpty()) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error de configuración",
+                            "No se encontró configuración de correo. "
+                            + "Define MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS y MAIL_FROM."));
+            return;
+        }
 
         try {
             int enviados = 0;
@@ -130,7 +148,7 @@ public class CorreoBean {
                 String nombreDest = obtenerNombrePorCorreo(correoDestino);
 
                 MimeMessage mensaje = new MimeMessage(sesion);
-                mensaje.setFrom(new InternetAddress(user));
+                mensaje.setFrom(new InternetAddress(from));
                 mensaje.setRecipient(Message.RecipientType.TO, new InternetAddress(correoDestino));
                 mensaje.setSubject(asunto, "UTF-8");
 
@@ -183,7 +201,6 @@ public class CorreoBean {
     }
 
     // ---------------- HTML DEL CORREO GENERAL ----------------
-
     private String construirHtmlCorreo(String nombreDestinatario) {
         String titulo = (asunto != null && !asunto.trim().isEmpty())
                 ? asunto.trim()
@@ -258,7 +275,6 @@ public class CorreoBean {
     }
 
     // ---------------- ADJUNTO ----------------
-
     private MimeBodyPart crearParteAdjunto(UploadedFile file) throws IOException, MessagingException {
         if (file == null || file.getSize() <= 0) {
             return null;
@@ -267,8 +283,7 @@ public class CorreoBean {
         MimeBodyPart adjunto = new MimeBodyPart();
 
         File temp = File.createTempFile("agrivi_adj_", "_" + file.getFileName());
-        try (InputStream is = file.getInputStream();
-             FileOutputStream os = new FileOutputStream(temp)) {
+        try (InputStream is = file.getInputStream(); FileOutputStream os = new FileOutputStream(temp)) {
 
             byte[] buffer = new byte[8192];
             int len;
@@ -283,26 +298,26 @@ public class CorreoBean {
     }
 
     // ---------------- UTIL ----------------
-
     private String escapeHtml(String text) {
         if (text == null) {
             return "";
         }
         return text.replace("&", "&amp;")
-                   .replace("<", "&lt;")
-                   .replace(">", "&gt;");
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
     }
 
     /**
-     * Busca el nombre del usuario por su correo en la lista de usuarios cargada.
+     * Busca el nombre del usuario por su correo en la lista de usuarios
+     * cargada.
      */
     private String obtenerNombrePorCorreo(String correo) {
         if (correo == null || listaUsr == null) {
             return null;
         }
         for (Usuario u : listaUsr) {
-            if (u != null && u.getCorreo() != null &&
-                u.getCorreo().equalsIgnoreCase(correo)) {
+            if (u != null && u.getCorreo() != null
+                    && u.getCorreo().equalsIgnoreCase(correo)) {
                 return u.getNombre();
             }
         }
@@ -310,23 +325,26 @@ public class CorreoBean {
     }
 
     // ---------------- CORREO AUTOMÁTICO DE FACTURA ----------------
-
     /**
-     * Versión antigua: se mantiene para compatibilidad, pero ahora llama a la nueva
-     * con datos extra nulos.
+     * Versión antigua: se mantiene para compatibilidad, pero ahora llama a la
+     * nueva con datos extra nulos.
      */
     public void enviarFacturaVenta(List<Ventas> ventasUltimoPago) {
         enviarFacturaVenta(ventasUltimoPago, null, null, null);
     }
 
     /**
-     * Nueva versión: recibe además dirección de envío, método de pago y tarjeta enmascarada.
-     * Es la que llama CarritoBean.
+     * Nueva versión: recibe además dirección de envío, método de pago y tarjeta
+     * enmascarada. Es la que llama CarritoBean.
+     */
+    /**
+     * Nueva versión: recibe además dirección de envío, método de pago y tarjeta
+     * enmascarada. Es la que llama CarritoBean.
      */
     public void enviarFacturaVenta(List<Ventas> ventasUltimoPago,
-                                   String direccionEnvio,
-                                   String metodoPago,
-                                   String tarjetaMasc) {
+            String direccionEnvio,
+            String metodoPago,
+            String tarjetaMasc) {
         if (ventasUltimoPago == null || ventasUltimoPago.isEmpty()) {
             return;
         }
@@ -344,31 +362,41 @@ public class CorreoBean {
             return;
         }
 
-        final String user = "kalvinalonzo@gmail.com";
-        final String pass = "fjre wsvh lsbn exyw";
-
-        Properties props = new Properties();
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.host", "smtp.gmail.com");
-        props.put("mail.smtp.port", "587");
-        props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
-
-        Session sesion = Session.getInstance(props, new Authenticator() {
-            @Override
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(user, pass);
-            }
-        });
+        // --------------------------------------------------------------------
+        // ✅ ELIMINADO (hardcode):
+        // final String user = "kalvinalonzo@gmail.com";
+        // final String pass = "fjre wsvh lsbn exyw";
+        //
+        // ✅ ELIMINADO (Gmail fijo):
+        // Properties props = new Properties();
+        // props.put("mail.smtp.auth", "true");
+        // props.put("mail.smtp.starttls.enable", "true");
+        // props.put("mail.smtp.host", "smtp.gmail.com");
+        // props.put("mail.smtp.port", "587");
+        // props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+        //
+        // ✅ ELIMINADO:
+        // Session sesion = Session.getInstance(props, new Authenticator() {
+        //     @Override
+        //     protected PasswordAuthentication getPasswordAuthentication() {
+        //         return new PasswordAuthentication(user, pass);
+        //     }
+        // });
+        //
+        // ✅ REEMPLAZADO POR:
+        // Sesión dinámica por variables de entorno (local/prod)
+        // --------------------------------------------------------------------
+        Session sesion = MailSessionFactory.createSession();
+        String from = MailSessionFactory.getFrom();
 
         try {
             MimeMessage mensaje = new MimeMessage(sesion);
-            mensaje.setFrom(new InternetAddress(user));
+            mensaje.setFrom(new InternetAddress(from));
             mensaje.setRecipient(Message.RecipientType.TO, new InternetAddress(correoDestino));
             mensaje.setSubject("Resumen de tu compra en Agrivi", "UTF-8");
 
             String html = construirHtmlFactura(ventasUltimoPago, nombreCliente,
-                                               direccionEnvio, metodoPago, tarjetaMasc);
+                    direccionEnvio, metodoPago, tarjetaMasc);
 
             MimeBodyPart cuerpoHtml = new MimeBodyPart();
             cuerpoHtml.setContent(html, "text/html; charset=UTF-8");
@@ -390,10 +418,10 @@ public class CorreoBean {
      * Construye el HTML de la factura/resumen de compra con datos adicionales.
      */
     private String construirHtmlFactura(List<Ventas> ventas,
-                                        String nombreCliente,
-                                        String direccionEnvio,
-                                        String metodoPago,
-                                        String tarjetaMasc) {
+            String nombreCliente,
+            String direccionEnvio,
+            String metodoPago,
+            String tarjetaMasc) {
         String saludo;
         if (nombreCliente != null && !nombreCliente.trim().isEmpty()) {
             saludo = "Hola, " + escapeHtml(nombreCliente) + ",";
@@ -404,11 +432,11 @@ public class CorreoBean {
         // Tabla de productos
         StringBuilder tabla = new StringBuilder();
         tabla.append("<table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;margin-top:10px;'>")
-             .append("<tr>")
-             .append("<th style='padding:8px;background:#f3f4f6;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px;'>Producto</th>")
-             .append("<th style='padding:8px;background:#f3f4f6;border-bottom:1px solid #e5e7eb;text-align:center;font-size:13px;'>Cantidad</th>")
-             .append("<th style='padding:8px;background:#f3f4f6;border-bottom:1px solid #e5e7eb;text-align:right;font-size:13px;'>Subtotal</th>")
-             .append("</tr>");
+                .append("<tr>")
+                .append("<th style='padding:8px;background:#f3f4f6;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px;'>Producto</th>")
+                .append("<th style='padding:8px;background:#f3f4f6;border-bottom:1px solid #e5e7eb;text-align:center;font-size:13px;'>Cantidad</th>")
+                .append("<th style='padding:8px;background:#f3f4f6;border-bottom:1px solid #e5e7eb;text-align:right;font-size:13px;'>Subtotal</th>")
+                .append("</tr>");
 
         double totalProductos = 0;
 
@@ -423,16 +451,16 @@ public class CorreoBean {
             totalProductos += subtotal;
 
             tabla.append("<tr>")
-                 .append("<td style='padding:8px;border-bottom:1px solid #f3f4f6;font-size:13px;'>")
-                 .append(escapeHtml(nombreProd))
-                 .append("</td>")
-                 .append("<td style='padding:8px;border-bottom:1px solid #f3f4f6;text-align:center;font-size:13px;'>")
-                 .append(cantidad)
-                 .append("</td>")
-                 .append("<td style='padding:8px;border-bottom:1px solid #f3f4f6;text-align:right;font-size:13px;'>$")
-                 .append(String.format("%,.2f", subtotal))
-                 .append("</td>")
-                 .append("</tr>");
+                    .append("<td style='padding:8px;border-bottom:1px solid #f3f4f6;font-size:13px;'>")
+                    .append(escapeHtml(nombreProd))
+                    .append("</td>")
+                    .append("<td style='padding:8px;border-bottom:1px solid #f3f4f6;text-align:center;font-size:13px;'>")
+                    .append(cantidad)
+                    .append("</td>")
+                    .append("<td style='padding:8px;border-bottom:1px solid #f3f4f6;text-align:right;font-size:13px;'>$")
+                    .append(String.format("%,.2f", subtotal))
+                    .append("</td>")
+                    .append("</tr>");
         }
 
         tabla.append("</table>");
@@ -483,14 +511,12 @@ public class CorreoBean {
                 + "              <p style='margin:0;'>Hemos registrado tu pedido correctamente. A continuación encontrarás el detalle de tu compra.</p>"
                 + "            </td>"
                 + "          </tr>"
-
                 // Tabla de productos
                 + "          <tr>"
                 + "            <td style='padding:0 24px 16px 24px;font-size:14px;color:#4b5563;'>"
-                +                tabla.toString()
+                + tabla.toString()
                 + "            </td>"
                 + "          </tr>"
-
                 // Totales
                 + "          <tr>"
                 + "            <td style='padding:0 24px 16px 24px;font-size:14px;color:#111827;'>"
@@ -499,7 +525,6 @@ public class CorreoBean {
                 + "              <p style='margin:4px 0;'>Total pagado: <strong>$" + String.format("%,.2f", totalConIva) + "</strong></p>"
                 + "            </td>"
                 + "          </tr>"
-
                 // Datos de envío y pago
                 + "          <tr>"
                 + "            <td style='padding:0 24px 16px 24px;'>"
@@ -516,14 +541,12 @@ public class CorreoBean {
                 + "              </table>"
                 + "            </td>"
                 + "          </tr>"
-
                 // Nota final
                 + "          <tr>"
                 + "            <td style='padding:0 24px 20px 24px;font-size:13px;color:#4b5563;'>"
                 + "              <p style='margin:0;'>Tu pedido está siendo preparado y llegará entre <strong>3 a 8 días hábiles</strong> a la dirección registrada.</p>"
                 + "            </td>"
                 + "          </tr>"
-
                 + "          <tr>"
                 + "            <td style='background-color:#f9fafb;padding:12px 24px;font-size:11px;color:#9ca3af;'>"
                 + "              © " + java.time.Year.now() + " Agrivi. Todos los derechos reservados."
@@ -538,7 +561,6 @@ public class CorreoBean {
     }
 
     // ---------------- GETTERS / SETTERS ----------------
-
     public String getAsunto() {
         return asunto;
     }

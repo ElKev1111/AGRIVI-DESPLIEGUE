@@ -4,496 +4,730 @@
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:p="http://primefaces.org/ui"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+
       lang="es">
 
-<h:head>
-    <title>Dashboard Administrativo - AgriviApp</title>
+    <h:head>
+        <title>Dashboard Administrativo - AgriviApp</title>
 
-    <!-- Tailwind + Bootstrap Icons (como en Correos) -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+        <!-- Tailwind + Bootstrap Icons (como en Correos) -->
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
 
-    <!-- Opcional: mantienes FontAwesome/Bootstrap por si en otras vistas los usas -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+        <!-- Opcional: mantienes FontAwesome/Bootstrap por si en otras vistas los usas -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
-    <style>
-        :root {
-            --agrivi-navy: #4F5E8C;
-            --agrivi-green: #17A649;
-            --agrivi-dark-green: #16592E;
-            --agrivi-cream: #F2EFDF;
-            --agrivi-sand: #D9A273;
-        }
+        <!-- Chart.js para el gráfico de productos -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        <style>
+            :root {
+                --agrivi-navy: #4F5E8C;
+                --agrivi-green: #17A649;
+                --agrivi-dark-green: #16592E;
+                --agrivi-cream: #F2EFDF;
+                --agrivi-sand: #D9A273;
+                --agrivi-red: #dc2626;
+                --agrivi-orange: #ea580c;
+                --agrivi-soft-gray: #f3f4f6;
+            }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, var(--agrivi-cream), #d7f0ff);
-            margin: 0;
-        }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
 
-        /* SIDEBAR */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            width: 250px;
-            background: linear-gradient(180deg, var(--agrivi-dark-green), var(--agrivi-navy));
-            color: white;
-            z-index: 1000;
-            overflow-y: auto;
-            box-shadow: 4px 0 20px rgba(22, 89, 46, 0.2);
-        }
+            body {
+                font-family: 'Inter', sans-serif;
+                background: linear-gradient(135deg, var(--agrivi-cream), #d7f0ff);
+                margin: 0;
+            }
 
-        .sidebar-header {
-            padding: 2rem 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            text-align: center;
-        }
-
-        .sidebar-header h4 {
-            margin: 0 0 0.5rem 0;
-            font-weight: 700;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .sidebar-header p {
-            margin: 0;
-            opacity: 0.9;
-            font-size: 0.875rem;
-        }
-
-        .sidebar-nav .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            color: rgba(255, 255, 255, 0.85);
-            text-decoration: none;
-            transition: all 0.2s ease;
-            border-left: 3px solid transparent;
-            font-size: 0.95rem;
-        }
-
-        .sidebar-nav .nav-link:hover {
-            background: rgba(255, 255, 255, 0.12);
-            color: white;
-            border-left-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .sidebar-nav .nav-link.active {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border-left-color: #ffd700;
-            font-weight: 600;
-        }
-
-        .sidebar-nav .nav-link i {
-            margin-right: 12px;
-            width: 20px;
-            text-align: center;
-        }
-
-        .sidebar-footer {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .sidebar-footer .btn-logout {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-
-        .sidebar-footer .btn-logout:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.5);
-        }
-
-        /* MAIN CONTENT */
-        .main-content {
-            margin-left: 250px;
-            padding: 2rem;
-            min-height: 100vh;
-        }
-
-        .top-bar {
-            background: white;
-            padding: 1.5rem 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .top-bar h2 {
-            margin: 0;
-            color: #1f2937;
-            font-weight: 700;
-            font-size: 1.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .top-bar h2 i {
-            color: var(--agrivi-green);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-info span {
-            color: #6b7280;
-            font-size: 0.95rem;
-        }
-
-        .user-info strong {
-            color: #1f2937;
-        }
-
-        .btn-outline-primary {
-            background: transparent;
-            border: 2px solid var(--agrivi-green);
-            color: var(--agrivi-green);
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            font-size: 0.875rem;
-        }
-
-        .btn-outline-primary:hover {
-            background: var(--agrivi-green);
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(23, 166, 73, 0.3);
-        }
-
-        /* CARD GENÉRICA */
-        .card {
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
-            padding: 2.5rem;
-        }
-
-        .card h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 2rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 2px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .card h3 i {
-            color: var(--agrivi-green);
-        }
-
-        /* ESTADÍSTICAS / MÉTRICAS (adaptado al estilo correos) */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
-            border-radius: 1rem;
-            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
-            padding: 1.25rem 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
-        }
-
-        .stat-icon {
-            width: 46px;
-            height: 46px;
-            border-radius: 9999px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(23, 166, 73, 0.08);
-            color: var(--agrivi-green);
-            font-size: 1.4rem;
-        }
-
-        .stat-info h4 {
-            margin: 0;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #111827;
-        }
-
-        .stat-info p {
-            margin: 0;
-            color: #6b7280;
-            font-size: 0.9rem;
-        }
-
-        /* BLOQUES INFERIORES (gráficas / notificaciones) */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .mini-card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .mini-card-title i {
-            color: var(--agrivi-green);
-        }
-
-        .notif-list p {
-            margin: 0 0 0.4rem 0;
-            font-size: 0.9rem;
-            color: #4b5563;
-        }
-
-        .notif-list p:last-child {
-            margin-bottom: 0;
-        }
-
-        .notif-list span.badge {
-            font-size: 0.7rem;
-            border-radius: 9999px;
-            padding: 0.15rem 0.5rem;
-            margin-left: 0.4rem;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 1024px) {
+            /* SIDEBAR */
             .sidebar {
-                width: 220px;
-            }
-            .main-content {
-                margin-left: 220px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .main-content {
-                margin-left: 0;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 250px;
+                background: linear-gradient(180deg, var(--agrivi-dark-green), var(--agrivi-navy));
+                color: white;
+                z-index: 1000;
+                overflow-y: auto;
+                box-shadow: 4px 0 20px rgba(22, 89, 46, 0.2);
             }
 
-            .top-bar {
-                flex-direction: column;
-                gap: 1rem;
+            .sidebar-header {
+                padding: 2rem 1.5rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.15);
                 text-align: center;
             }
 
-            .card {
-                padding: 1.5rem;
+            .sidebar-header h4 {
+                margin: 0 0 0.5rem 0;
+                font-weight: 700;
+                font-size: 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
             }
-        }
-    </style>
-</h:head>
 
-<h:body>
+            .sidebar-header p {
+                margin: 0;
+                opacity: 0.9;
+                font-size: 0.875rem;
+            }
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h4><i class="bi bi-flower1"></i> Agrivi</h4>
-            <p>Panel Admin</p>
-        </div>
+            .sidebar-nav .nav-link {
+                display: flex;
+                align-items: center;
+                padding: 12px 20px;
+                color: rgba(255, 255, 255, 0.85);
+                text-decoration: none;
+                transition: all 0.2s ease;
+                border-left: 3px solid transparent;
+                font-size: 0.95rem;
+            }
 
-        <nav class="sidebar-nav">
-            <h:link outcome="/HomeAdmin1.xhtml" styleClass="nav-link active">
-                <i class="bi bi-graph-up"></i> Dashboard
-            </h:link>
-            <h:link outcome="/HomeAdmin2.xhtml" styleClass="nav-link">
-                <i class="bi bi-people-fill"></i> Usuarios
-            </h:link>
-            <h:link outcome="/HomeAdmin3.xhtml" styleClass="nav-link">
-                <i class="bi bi-box-seam"></i> Productos
-            </h:link>
-            <h:link outcome="/Correos.xhtml" styleClass="nav-link">
-                <i class="bi bi-envelope-fill"></i> Correos
-            </h:link>
-            <h:link outcome="/HomeAdmin4.xhtml" styleClass="nav-link">
-                <i class="bi bi-cart-check-fill"></i> Ventas
-            </h:link>
-            <h:link outcome="/HomeAdmin5.xhtml" styleClass="nav-link">
-                <i class="bi bi-person-badge-fill"></i> Empleados
-            </h:link>
-            <h:link outcome="/MovInventario.xhtml" styleClass="nav-link">
-                <i class="bi bi-boxes"></i> Inventario
-            </h:link>
-            <h:link outcome="/PedidosProveedores.xhtml" styleClass="nav-link">
-                <i class="bi bi-truck"></i> Pedidos
-            </h:link>
-            <h:link outcome="/dashboardProveedores.xhtml" styleClass="nav-link">
-                <i class="bi bi-building"></i> Vista Proveedores
-            </h:link>
-            <h:link outcome="/dashboardPresentacion.xhtml" styleClass="nav-link">
-                <i class="bi bi-easel"></i> Presentación
-            </h:link>
-        </nav>
+            .sidebar-nav .nav-link:hover {
+                background: rgba(255, 255, 255, 0.12);
+                color: white;
+                border-left-color: rgba(255, 255, 255, 0.3);
+            }
 
-        <h:form>
-            <div class="sidebar-footer">
-                <h:commandLink action="#{usuarioBean.logout()}" styleClass="btn-logout">
-                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                </h:commandLink>
+            .sidebar-nav .nav-link.active {
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                border-left-color: #ffd700;
+                font-weight: 600;
+            }
+
+            .sidebar-nav .nav-link i {
+                margin-right: 12px;
+                width: 20px;
+                text-align: center;
+            }
+
+            .sidebar-footer {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 1.5rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.15);
+            }
+
+            .sidebar-footer .btn-logout {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 0.75rem;
+                border-radius: 0.5rem;
+                transition: all 0.2s ease;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                text-decoration: none;
+                font-size: 0.9rem;
+            }
+
+            .sidebar-footer .btn-logout:hover {
+                background: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.5);
+            }
+
+            /* MAIN CONTENT */
+            .main-content {
+                margin-left: 250px;
+                padding: 2rem;
+                min-height: 100vh;
+            }
+
+            .top-bar {
+                background: white;
+                padding: 1.5rem 2rem;
+                border-radius: 1rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                margin-bottom: 2rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .top-bar h2 {
+                margin: 0;
+                color: #1f2937;
+                font-weight: 700;
+                font-size: 1.75rem;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+            .top-bar h2 i {
+                color: var(--agrivi-green);
+            }
+
+            .user-info {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .user-info span {
+                color: #6b7280;
+                font-size: 0.95rem;
+            }
+
+            .user-info strong {
+                color: #1f2937;
+            }
+
+            .btn-outline-primary {
+                background: transparent;
+                border: 2px solid var(--agrivi-green);
+                color: var(--agrivi-green);
+                padding: 0.5rem 1rem;
+                border-radius: 9999px;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 0.875rem;
+            }
+
+            .btn-outline-primary:hover {
+                background: var(--agrivi-green);
+                color: white;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(23, 166, 73, 0.3);
+            }
+
+            /* CARD GENÉRICA */
+            .card {
+                background: white;
+                border-radius: 1rem;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+                padding: 2.5rem;
+            }
+
+            .card h3 {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: #1f2937;
+                margin-bottom: 2rem;
+                padding-bottom: 0.75rem;
+                border-bottom: 2px solid #e5e7eb;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+            .card h3 i {
+                color: var(--agrivi-green);
+            }
+
+            /* ESTADÍSTICAS / MÉTRICAS */
+            .stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .stat-card {
+                background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+                border-radius: 1rem;
+                box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+                padding: 1.25rem 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .stat-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+            }
+
+            .stat-icon {
+                width: 46px;
+                height: 46px;
+                border-radius: 9999px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(23, 166, 73, 0.08);
+                color: var(--agrivi-green);
+                font-size: 1.4rem;
+            }
+
+            .stat-info h4 {
+                margin: 0;
+                font-size: 1.4rem;
+                font-weight: 700;
+                color: #111827;
+            }
+
+            .stat-info p {
+                margin: 0;
+                color: #6b7280;
+                font-size: 0.9rem;
+            }
+
+            /* BLOQUES INFERIORES (gráficas / notificaciones) */
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                gap: 1.5rem;
+            }
+
+            .mini-card-title {
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #111827;
+                margin-bottom: 1rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .mini-card-title i {
+                color: var(--agrivi-green);
+            }
+
+            /* Card del gráfico */
+            .chart-card {
+                border-radius: 0.75rem;
+                background: #ffffff;
+                border: 1px solid #e5e7eb;
+                padding: 1.25rem 1.5rem;
+                box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+            }
+
+            .chart-card canvas {
+                width: 100% !important;
+                max-height: 280px;
+            }
+
+
+            /* Listado de notificaciones / stock bajo */
+            .notif-panel {
+                border-radius: 0.75rem;
+                background: #ffffff;
+                border: 1px solid #e5e7eb;
+                padding: 1.25rem 1.5rem;
+                box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+            }
+
+            .notif-list {
+                margin: 0;
+                padding: 0;
+                list-style: none;
+            }
+
+            .notif-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.55rem 0.2rem;
+                border-bottom: 1px dashed #e5e7eb;
+                font-size: 0.9rem;
+                color: #4b5563;
+            }
+
+            .notif-item:last-child {
+                border-bottom: none;
+            }
+
+            .notif-product {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .notif-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 9999px;
+            }
+
+            .notif-dot.low {
+                background: var(--agrivi-orange);
+            }
+
+            .notif-dot.critical {
+                background: var(--agrivi-red);
+            }
+
+            .notif-dot.ok {
+                background: var(--agrivi-green);
+            }
+
+            .notif-tag {
+                font-size: 0.7rem;
+                padding: 0.15rem 0.5rem;
+                border-radius: 9999px;
+                font-weight: 600;
+            }
+
+            .notif-tag.low {
+                background: rgba(234, 88, 12, 0.1);
+                color: var(--agrivi-orange);
+            }
+
+            .notif-tag.critical {
+                background: rgba(220, 38, 38, 0.1);
+                color: var(--agrivi-red);
+            }
+
+            .notif-tag.info {
+                background: rgba(37, 99, 235, 0.1);
+                color: #2563eb;
+            }
+
+            .notif-stock {
+                font-weight: 600;
+                color: #111827;
+            }
+
+            .notif-subtext {
+                font-size: 0.75rem;
+                color: #9ca3af;
+                margin-top: 0.2rem;
+            }
+
+            /* RESPONSIVE */
+            @media (max-width: 1024px) {
+                .sidebar {
+                    width: 220px;
+                }
+                .main-content {
+                    margin-left: 220px;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                }
+
+                .main-content {
+                    margin-left: 0;
+                }
+
+                .top-bar {
+                    flex-direction: column;
+                    gap: 1rem;
+                    text-align: center;
+                }
+
+                .card {
+                    padding: 1.5rem;
+                }
+            }
+        </style>
+    </h:head>
+
+    <h:body>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h4><i class="bi bi-flower1"></i> Agrivi</h4>
+                <p>Panel Admin</p>
             </div>
-        </h:form>
-    </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="top-bar">
-            <h2>
-                <i class="bi bi-speedometer2"></i>
-                Dashboard Administrativo
-            </h2>
-            <div class="user-info">
-                <span>
-                    Bienvenido, <strong>#{usuarioBean.usuario.nombre}</strong>
-                </span>
-                <h:link outcome="/perfil.xhtml" styleClass="btn-outline-primary">
-                    <i class="bi bi-person-circle"></i>
-                    <span>Mi Perfil</span>
+            <nav class="sidebar-nav">
+                <h:link outcome="/HomeAdmin1.xhtml" styleClass="nav-link active">
+                    <i class="bi bi-graph-up"></i> Dashboard
                 </h:link>
+                <h:link outcome="/HomeAdmin2.xhtml" styleClass="nav-link">
+                    <i class="bi bi-people-fill"></i> Usuarios
+                </h:link>
+                <h:link outcome="/HomeAdmin3.xhtml" styleClass="nav-link">
+                    <i class="bi bi-box-seam"></i> Productos
+                </h:link>
+                <h:link outcome="/Correos.xhtml" styleClass="nav-link">
+                    <i class="bi bi-envelope-fill"></i> Correos
+                </h:link>
+                <h:link outcome="/HomeAdmin4.xhtml" styleClass="nav-link">
+                    <i class="bi bi-cart-check-fill"></i> Ventas
+                </h:link>
+                <h:link outcome="/HomeAdmin5.xhtml" styleClass="nav-link">
+                    <i class="bi bi-person-badge-fill"></i> Empleados
+                </h:link>
+                <h:link outcome="/MovInventario.xhtml" styleClass="nav-link">
+                    <i class="bi bi-boxes"></i> Inventario
+                </h:link>
+                <h:link outcome="/PedidosProveedores.xhtml" styleClass="nav-link">
+                    <i class="bi bi-truck"></i> Pedidos
+                </h:link>
+                <h:link outcome="/dashboardProveedores.xhtml" styleClass="nav-link">
+                    <i class="bi bi-building"></i> Vista Proveedores
+                </h:link>
+                <h:link outcome="/dashboardPresentacion.xhtml" styleClass="nav-link">
+                    <i class="bi bi-easel"></i> Presentación
+                </h:link>
+            </nav>
+
+            <h:form>
+                <div class="sidebar-footer">
+                    <h:commandLink action="#{usuarioBean.logout()}" styleClass="btn-logout">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                    </h:commandLink>
+                </div>
+            </h:form>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="top-bar">
+                <h2>
+                    <i class="bi bi-speedometer2"></i>
+                    Dashboard Administrativo
+                </h2>
+                <div class="user-info">
+                    <span>
+                        Bienvenido, <strong>#{usuarioBean.usuario.nombre}</strong>
+                    </span>
+                    <h:link outcome="/perfil.xhtml" styleClass="btn-outline-primary">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Mi Perfil</span>
+                    </h:link>
+                </div>
+            </div>
+
+            <!-- Contenido principal del dashboard -->
+            <div class="card">
+                <h3>
+                    <i class="bi bi-graph-up-arrow"></i>
+                    Resumen General
+                </h3>
+
+                <!-- Métricas principales -->
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>30</h4>
+                            <p>Usuarios Registrados</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>7</h4>
+                            <p>Productos Activos</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>12</h4>
+                            <p>Proveedores</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>$ 300.000</h4>
+                            <p>Ventas Totales</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloques secundarios: gráfica / alertas inventario -->
+                <div class="dashboard-grid">
+
+                    <!-- Gráfico de actividad / productos -->
+                    <div>
+                        <div class="mini-card-title">
+                            <i class="bi bi-bar-chart-line"></i>
+                            Actividad Reciente de Productos
+                        </div>
+                        <div class="chart-card">
+                            <!-- El gráfico es puramente frontend, no toca lógica JSF -->
+                            <canvas id="productosChart"></canvas>
+                            <p class="notif-subtext" style="margin-top: 0.75rem;">
+                                Vista rápida de unidades en inventario para los productos principales.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Alertas de inventario / stock bajo -->
+                    <div>
+                        <div class="mini-card-title">
+                            <i class="bi bi-bell-fill"></i>
+                            Alertas de Inventario
+                        </div>
+
+                        <div class="notif-panel">
+                            <ul class="notif-list">
+
+                                <ui:repeat value="#{productoBean.listaProductos}" var="p">
+
+                                    <li class="notif-item">
+
+                                        <!-- Selección del color del punto -->
+                                        <span class="notif-dot #{p.stock le 5 ? 'critical' : (p.stock le 10 ? 'low' : 'ok')}"></span>
+
+                                        <div class="notif-product">
+                                            <div>
+                                                <span>#{p.nombreProducto}</span>
+
+                                                <!-- Mensaje dinámico -->
+                                                <div class="notif-subtext">
+                                                    #{p.stock le 5 ? 
+                                                      'Stock crítico, contactar proveedor urgentemente.' :
+                                                      (p.stock le 10 ?
+                                                      'Stock bajo, se recomienda reabastecer pronto.' :
+                                                      'Inventario saludable.')}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style="text-align:right;">
+                                            <div class="notif-stock">#{p.stock} u.</div>
+
+                                            <!-- Etiqueta dinámica -->
+                                            <span class="notif-tag #{p.stock le 5 ? 'critical' :
+                                                                     (p.stock le 10 ? 'low' : 'info')}">
+                                                  #{p.stock le 5 ? 'Crítico' :
+                                                    (p.stock le 10 ? 'Bajo' : 'OK')}
+                                            </span>
+                                        </div>
+
+                                    </li>
+
+                                </ui:repeat>
+
+                            </ul>
+                        </div>
+                    </div>
+
+
+                </div>
             </div>
         </div>
 
-        <!-- Contenido principal del dashboard -->
-        <div class="card">
-            <h3>
-                <i class="bi bi-graph-up-arrow"></i>
-                Resumen General
-            </h3>
+        <h:outputScript>
+            var productosLabels = [
+            <ui:repeat value="#{productoBean.listaProductos}" var="p" varStatus="st">
+                "#{p.nombreProducto}"#{st.last ? '' : ','}
+            </ui:repeat>
+            ];
 
-            <!-- Métricas principales (mismos valores que tenías, solo estilizados) -->
-            <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h4>30</h4>
-                        <p>Usuarios Registrados</p>
-                    </div>
-                </div>
+            var productosStock = [
+            <ui:repeat value="#{productoBean.listaProductos}" var="p" varStatus="st">
+                #{p.stock}#{st.last ? '' : ','}
+            </ui:repeat>
+            ];
+        </h:outputScript>
+        <!-- Script para inicializar el gráfico de productos -->
+        <script type="text/javascript">
+            document.addEventListener('DOMContentLoaded', function () {
+                var canvas = document.getElementById('productosChart');
+                if (!canvas) {
+                    return;
+                }
+                var ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    return;
+                }
 
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-box-seam"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h4>7</h4>
-                        <p>Productos Activos</p>
-                    </div>
-                </div>
+                // Datos de ejemplo: puedes ajustar los nombres y cantidades para que se parezcan a tu inventario real
+                var chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: productosLabels,
+                        datasets: [{
+                                label: 'Unidades en stock',
+                                data: productosStock,
+                                backgroundColor: [
+                                    'rgba(220,38,38,0.15)',
+                                    'rgba(234,88,12,0.18)',
+                                    'rgba(234,88,12,0.18)',
+                                    'rgba(23,166,73,0.18)',
+                                    'rgba(37,99,235,0.18)'
+                                ],
+                                borderColor: [
+                                    '#dc2626',
+                                    '#ea580c',
+                                    '#ea580c',
+                                    '#17A649',
+                                    '#2563eb'
+                                ],
+                                borderWidth: 1.5,
+                                borderRadius: 6
+                            }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                labels: {
+                                    color: '#4b5563',
+                                    font: {
+                                        family: 'Inter',
+                                        size: 11
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: '#111827',
+                                titleFont: {family: 'Inter', size: 12},
+                                bodyFont: {family: 'Inter', size: 11}
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#6b7280',
+                                    font: {family: 'Inter', size: 11}
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#6b7280',
+                                    font: {family: 'Inter', size: 11}
+                                },
+                                grid: {
+                                    color: '#e5e7eb'
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
 
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-truck"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h4>12</h4>
-                        <p>Proveedores</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-cash-stack"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h4>$ 300.000</h4>
-                        <p>Ventas Totales</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bloques secundarios: gráfica / notificaciones -->
-            <div class="dashboard-grid">
-                <div>
-                    <div class="mini-card-title">
-                        <i class="bi bi-bar-chart-line"></i>
-                        Actividad Reciente
-                    </div>
-                    <div style="border-radius: 0.75rem; border: 1px dashed #d1d5db; padding: 2rem; text-align: center; color: #6b7280;">
-                        Aquí puedes integrar un gráfico de actividad (PrimeFaces Chart, Chart.js, etc.).
-                    </div>
-                </div>
-
-                <div>
-                    <div class="mini-card-title">
-                        <i class="bi bi-bell-fill"></i>
-                        Notificaciones Recientes
-                    </div>
-                    <div class="notif-list">
-                        <p>📦 Nuevo pedido recibido <span class="badge bg-success">Nuevo</span></p>
-                        <p>👤 Usuario registrado hoy</p>
-                        <p>📊 Reporte mensual listo</p>
-                        <p>⚠️ Stock bajo en productos clave</p>
-                        <p>✅ Pedido completado #1234</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</h:body>
+    </h:body>
 </html>

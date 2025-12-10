@@ -597,14 +597,7 @@
                     <div class="button-group d-flex gap-2">
 
                         <!-- EXPORTAR TODO (cuando NO hay filtros) -->
-                        <p:commandButton value="Exportar todo (Excel)"
-                                         styleClass="btn-outline-success btn-sm"
-                                         icon="pi pi-file-excel"
-                                         rendered="#{not movInventarioBean.hayFiltrosActivos()}">
-                            <p:dataExporter type="xlsx"
-                                            target="tablaMovimientos"
-                                            fileName="movimientos_inventario" />
-                        </p:commandButton>
+
 
                         <p:commandButton value="Exportar todo (PDF)"
                                          styleClass="btn-outline-danger btn-sm"
@@ -616,14 +609,7 @@
                         </p:commandButton>
 
                         <!-- EXPORTAR FILTRADO (cuando SI hay filtros) -->
-                        <p:commandButton value="Exportar filtrado (Excel)"
-                                         styleClass="btn-success btn-sm"
-                                         icon="pi pi-file-excel"
-                                         rendered="#{movInventarioBean.hayFiltrosActivos()}">
-                            <p:dataExporter type="xlsx"
-                                            target="tablaMovimientos"
-                                            fileName="movimientos_inventario_filtrado" />
-                        </p:commandButton>
+
 
                         <p:commandButton value="Exportar filtrado (PDF)"
                                          styleClass="btn-danger btn-sm"

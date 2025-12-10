@@ -134,6 +134,7 @@ public class ProveedorBean implements Serializable {
         }
         return productos.size();
     }
+    
 
     // Getters y Setters
     public List<Proveedor> getListaProveedores() {

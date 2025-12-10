@@ -2,7 +2,9 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
-      xmlns:f="http://xmlns.jcp.org/jsf/core">
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
 
     <h:head>
         <meta charset="UTF-8"/>
@@ -239,37 +241,24 @@
                         warnClass="alert-error"
                         fatalClass="alert-error"/>
 
-            <h:form>
+            <h:form id="frmRecuperar">
+                <p:growl id="growl" showDetail="true" life="4000" />
 
-                <div class="form-group">
-                    <label for="correo">
-                        <i class="bi bi-envelope-fill"></i>
-                        Correo Electrónico
-                    </label>
-                    <h:inputText id="correo"
-                                 value="#{usuarioBean.correoRecuperacion}"
-                                 required="true"
-                                 requiredMessage="El correo es obligatorio."
-                                 styleClass="form-input"/>
-                </div>
+                <p:outputLabel for="correo" value="CORREO ELECTRÓNICO" />
 
-                <div class="info-box">
-                    <i class="bi bi-info-circle-fill"></i>
-                    <div>
-                        Ingresa el correo con el que te registraste. 
-                        Te enviaremos una contraseña temporal para que puedas ingresar.
-                    </div>
-                </div>
+                <p:inputText id="correo"
+                             value="#{usuarioBean.correoRecuperacion}"
+                             required="true"
+                             requiredMessage="Ingresa tu correo." />
 
-                <div class="form-group">
-                    <h:commandButton value="Enviar Nueva Contraseña"
-                                     action="#{usuarioBean.enviarNuevaContrasena}"
-                                     styleClass="btn-primary">
-                        <f:ajax/>
-                    </h:commandButton>
-                </div>
-
+                <!-- La opción más estable y simple -->
+                <p:commandButton value="Enviar Nueva Contraseña"
+                                 action="#{usuarioBean.enviarNuevaContrasena}"
+                                 ajax="false"
+                                 styleClass="btn-verde" />
             </h:form>
+
+
 
             <p class="back-link">
                 <h:outputLink value="#{request.contextPath}/login.xhtml">

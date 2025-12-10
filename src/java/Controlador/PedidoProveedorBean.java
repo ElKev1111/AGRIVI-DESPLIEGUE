@@ -7,7 +7,7 @@ import DAO.PedidoProveedorDAO;
 import DAO.ProveedorDAO;
 import DAO.ProductoDAO;
 import java.io.Serializable;
-import java.util.Date; 
+import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
 import java.sql.SQLException;
@@ -20,7 +20,8 @@ import javax.faces.context.FacesContext;
 @ManagedBean(name = "pedidoProveedorBean")
 @ViewScoped
 public class PedidoProveedorBean implements Serializable {
-    private static final long serialVersionUID =1L;
+
+    private static final long serialVersionUID = 1L;
 
     private transient PedidoProveedorDAO pedidoDAO = new PedidoProveedorDAO();
     private transient ProveedorDAO proveedorDAO = new ProveedorDAO();
@@ -59,7 +60,20 @@ public class PedidoProveedorBean implements Serializable {
         }
         return productoDAO;
     }
-   
+    // --------------------------------------------------------------------
+// ✅ NUEVO:
+// Servicio de correo para notificar al proveedor automáticamente.
+// Se crea de forma lazy para no instanciarlo si no se usa.
+// --------------------------------------------------------------------
+    private transient EmailService emailService;
+
+    private EmailService getEmailService() {
+        if (emailService == null) {
+            emailService = new EmailService();
+        }
+        return emailService;
+    }
+
     @PostConstruct
     public void init() {
         cargarProveedores();
@@ -120,10 +134,10 @@ public class PedidoProveedorBean implements Serializable {
 //            }
 //        }
 //    }
-     public void cargarProductosPorProveedor() {
+    public void cargarProductosPorProveedor() {
         FacesContext context = FacesContext.getCurrentInstance();
         int idProveedorSeleccionado = nuevoPedido.getIdProveedor();
-        
+
         this.listaProductosPorProveedor.clear();
         this.nuevoPedido.setIdProducto(0);
 
@@ -133,65 +147,129 @@ public class PedidoProveedorBean implements Serializable {
                 this.listaProductosPorProveedor = getProductoDAO().listarPorProveedor(idProveedorSeleccionado);
             } catch (Exception e) {
                 context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error",
-                    "No se pudieron cargar los productos: " + e.getMessage()));
+                        "No se pudieron cargar los productos: " + e.getMessage()));
             }
         }
     }
 
     public String registrarNuevoPedido() {
-    FacesContext context = FacesContext.getCurrentInstance();
-    
-    if (nuevoPedido.getIdProducto() <= 0 || nuevoPedido.getIdProveedor() <= 0) {
-        context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Validación", "Debe seleccionar Proveedor y Producto."));
-        return null;
-    }
-    if (nuevoPedido.getCantidad() <= 0) {
-        context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Validación", "La Cantidad debe ser mayor a cero."));
-        return null;
-    }
+        FacesContext context = FacesContext.getCurrentInstance();
 
-    try {
-        Proveedor proveedorSeleccionado = getProveedorDAO().obtenerPorId(nuevoPedido.getIdProveedor());
-        Producto productoSeleccionado = getProductoDAO().buscar(nuevoPedido.getIdProducto());
-
-        if (proveedorSeleccionado == null || productoSeleccionado == null) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Proveedor o Producto no encontrado."));
+        // ---------------- VALIDACIONES ----------------
+        if (nuevoPedido.getIdProducto() <= 0 || nuevoPedido.getIdProveedor() <= 0) {
+            context.addMessage(null, new FacesMessage(
+                    FacesMessage.SEVERITY_ERROR,
+                    "Validación",
+                    "Debe seleccionar Proveedor y Producto."
+            ));
             return null;
         }
 
-        nuevoPedido.setNombreProveedor(proveedorSeleccionado.getNombreProveedor());
-        nuevoPedido.setNombreProducto(productoSeleccionado.getNombreProducto());
-
-        if (nuevoPedido.getDescripcionPedido() == null || nuevoPedido.getDescripcionPedido().trim().isEmpty()) {
-            String descripcionGenerada = "Pedido de " + nuevoPedido.getCantidad() + " de " 
-                    + nuevoPedido.getNombreProducto() + " a " + nuevoPedido.getNombreProveedor();
-            nuevoPedido.setDescripcionPedido(descripcionGenerada);
-        }
-
-        nuevoPedido.setEstado("PENDIENTE");
-
-        if (getPedidoDAO().registrar(nuevoPedido)) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito",
-                    "Pedido de " + nuevoPedido.getNombreProducto() + " creado."));
-
-            this.nuevoPedido = new PedidoProveedor();
-            this.listaProductosPorProveedor.clear();
-            cargarPedidos();
-
-            // 👇 Igual que haces con HomeAdmin3
-            return "PedidosProveedores?faces-redirect=true";
-        } else {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fallo", "No se pudo registrar el pedido (Error DAO)."));
+        if (nuevoPedido.getCantidad() <= 0) {
+            context.addMessage(null, new FacesMessage(
+                    FacesMessage.SEVERITY_ERROR,
+                    "Validación",
+                    "La Cantidad debe ser mayor a cero."
+            ));
             return null;
         }
 
-    } catch (Exception e) {
-        context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_FATAL, "Error Grave", "Error al registrar el pedido: " + e.getMessage()));
-        e.printStackTrace();
-        return null;
-    }
-}
+        try {
+            // ---------------- OBTENER ENTIDADES ----------------
+            Proveedor proveedorSeleccionado = getProveedorDAO().obtenerPorId(nuevoPedido.getIdProveedor());
+            Producto productoSeleccionado = getProductoDAO().buscar(nuevoPedido.getIdProducto());
 
+            if (proveedorSeleccionado == null || productoSeleccionado == null) {
+                context.addMessage(null, new FacesMessage(
+                        FacesMessage.SEVERITY_ERROR,
+                        "Error",
+                        "Proveedor o Producto no encontrado."
+                ));
+                return null;
+            }
+
+            // ---------------- ARMAR DATOS DEL PEDIDO ----------------
+            nuevoPedido.setNombreProveedor(proveedorSeleccionado.getNombreProveedor());
+            nuevoPedido.setNombreProducto(productoSeleccionado.getNombreProducto());
+
+            if (nuevoPedido.getDescripcionPedido() == null || nuevoPedido.getDescripcionPedido().trim().isEmpty()) {
+                String descripcionGenerada = "Pedido de " + nuevoPedido.getCantidad() + " de "
+                        + nuevoPedido.getNombreProducto() + " a " + nuevoPedido.getNombreProveedor();
+                nuevoPedido.setDescripcionPedido(descripcionGenerada);
+            }
+
+            // Estado inicial del flujo
+            nuevoPedido.setEstado("PENDIENTE");
+
+            // ---------------- REGISTRO EN BD ----------------
+            if (getPedidoDAO().registrar(nuevoPedido)) {
+
+                context.addMessage(null, new FacesMessage(
+                        FacesMessage.SEVERITY_INFO,
+                        "Éxito",
+                        "Pedido de " + nuevoPedido.getNombreProducto() + " creado."
+                ));
+
+                // --------------------------------------------------------------------
+                // ✅ ENVÍO AUTOMÁTICO DE CORREO
+                // - Usa el campo real del modelo Proveedor: getCorreo()
+                // - Si el correo falla, el pedido NO se pierde
+                // --------------------------------------------------------------------
+                try {
+                    String correoProveedor = proveedorSeleccionado.getCorreo();
+
+                    if (correoProveedor != null && !correoProveedor.trim().isEmpty()) {
+                        boolean enviado = getEmailService().enviarPedido(nuevoPedido, correoProveedor);
+
+                        if (!enviado) {
+                            context.addMessage(null, new FacesMessage(
+                                    FacesMessage.SEVERITY_WARN,
+                                    "Correo",
+                                    "Pedido creado, pero no se pudo enviar el correo al proveedor."
+                            ));
+                        }
+                    } else {
+                        context.addMessage(null, new FacesMessage(
+                                FacesMessage.SEVERITY_WARN,
+                                "Correo",
+                                "Pedido creado, pero el proveedor no tiene correo registrado."
+                        ));
+                    }
+
+                } catch (Exception ex) {
+                    context.addMessage(null, new FacesMessage(
+                            FacesMessage.SEVERITY_WARN,
+                            "Correo",
+                            "Pedido creado, pero ocurrió un error al enviar el correo."
+                    ));
+                }
+
+                // ---------------- LIMPIEZA UI ----------------
+                this.nuevoPedido = new PedidoProveedor();
+                this.listaProductosPorProveedor.clear();
+                cargarPedidos();
+
+                return "PedidosProveedores?faces-redirect=true";
+
+            } else {
+                context.addMessage(null, new FacesMessage(
+                        FacesMessage.SEVERITY_ERROR,
+                        "Fallo",
+                        "No se pudo registrar el pedido (Error DAO)."
+                ));
+                return null;
+            }
+
+        } catch (Exception e) {
+            context.addMessage(null, new FacesMessage(
+                    FacesMessage.SEVERITY_FATAL,
+                    "Error Grave",
+                    "Error al registrar el pedido: " + e.getMessage()
+            ));
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     public void marcarPendiente(PedidoProveedor pedido) {
         cambiarEstado(pedido, "PENDIENTE", false);
@@ -242,7 +320,6 @@ public class PedidoProveedorBean implements Serializable {
         }
     }
 
-   
     public int getTotalPedidos() {
         return totalPedidos;
     }
