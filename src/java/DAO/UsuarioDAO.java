@@ -20,9 +20,7 @@ public class UsuarioDAO implements Serializable {
         List<Usuario> listaUsuarios = new ArrayList<>();
         String sql = "SELECT * FROM usuario";
 
-        try (Connection con = Conexion.conectar();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection con = Conexion.conectar(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Usuario u = new Usuario();
@@ -61,8 +59,7 @@ public class UsuarioDAO implements Serializable {
         String sql = "INSERT INTO usuario (rol, nombre, correo, celular, fecha_actualizacion, fecha_creacion, direccion, password, estado, fotoPerfil, biografia) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection con = Conexion.conectar();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = Conexion.conectar(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, u.getRol().name().toLowerCase());
             ps.setString(2, u.getNombre());
@@ -88,8 +85,7 @@ public class UsuarioDAO implements Serializable {
     public void actualizar(Usuario u) {
         String sql = "UPDATE usuario SET rol=?, nombre=?, correo=?, celular=?, direccion=?, estado=? WHERE id=?";
 
-        try (Connection con = Conexion.conectar();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = Conexion.conectar(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, u.getRol().name().toLowerCase());
             ps.setString(2, u.getNombre());
@@ -109,8 +105,7 @@ public class UsuarioDAO implements Serializable {
     public boolean actualizarEstado(int idUsuario, String estado) {
         String sql = "UPDATE usuario SET estado=? WHERE id=?";
 
-        try (Connection con = Conexion.conectar();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = Conexion.conectar(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, estado);
             ps.setInt(2, idUsuario);
@@ -126,8 +121,7 @@ public class UsuarioDAO implements Serializable {
     public Usuario obtenerPorId(int idUsuario) {
         String sql = "SELECT * FROM usuario WHERE id = ?";
 
-        try (Connection con = Conexion.conectar();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = Conexion.conectar(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, idUsuario);
 
@@ -166,26 +160,62 @@ public class UsuarioDAO implements Serializable {
     }
 
     public boolean actualizarPerfil(Usuario u) {
-        // IMPORTANTE: ahora también actualiza password
-        String sql = "UPDATE usuario SET nombre=?, correo=?, celular=?, direccion=?, biografia=?, fotoPerfil=?, password=? WHERE id=?";
+    // Mantengo la firma original por compatibilidad
+    // (pero desde UsuarioBean vamos a llamar al método con boolean)
+    return actualizarPerfil(u, true);
+}
 
-        try (Connection con = Conexion.conectar();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+public boolean actualizarPerfil(Usuario u, boolean actualizarPassword) {
 
-            ps.setString(1, u.getNombre());
-            ps.setString(2, u.getCorreo());
-            ps.setString(3, u.getCelular());
-            ps.setString(4, u.getDireccion());
-            ps.setString(5, u.getBiografia());
-            ps.setString(6, u.getFotoPerfil());
-            ps.setString(7, u.getPassword());
-            ps.setInt(8, u.getId());
+    String sql = actualizarPassword
+            ? "UPDATE usuario SET nombre=?, correo=?, celular=?, direccion=?, biografia=?, fotoPerfil=?, password=?, fecha_actualizacion = NOW() WHERE id=?"
+            : "UPDATE usuario SET nombre=?, correo=?, celular=?, direccion=?, biografia=?, fotoPerfil=?, fecha_actualizacion = NOW() WHERE id=?";
 
-            return ps.executeUpdate() > 0;
+    Connection con = null;
+    try {
+        con = Conexion.conectar();
+        if (con == null) return false;
 
-        } catch (SQLException e) {
-            System.out.println("Error al actualizar perfil: " + e.getMessage());
-            return false;
+        int filas;
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            int i = 1;
+            ps.setString(i++, u.getNombre());
+            ps.setString(i++, u.getCorreo());
+            ps.setString(i++, u.getCelular());
+            ps.setString(i++, u.getDireccion());
+            ps.setString(i++, u.getBiografia());
+            ps.setString(i++, u.getFotoPerfil());
+
+            if (actualizarPassword) {
+                ps.setString(i++, u.getPassword());
+            }
+
+            ps.setInt(i++, u.getId());
+
+            filas = ps.executeUpdate();
+        }
+
+        // Si filas == 0 puede ser “sin cambios”, lo tratamos como OK si el usuario existe
+        if (filas > 0) return true;
+
+        String check = "SELECT 1 FROM usuario WHERE id = ?";
+        try (PreparedStatement psCheck = con.prepareStatement(check)) {
+            psCheck.setInt(1, u.getId());
+            try (ResultSet rs = psCheck.executeQuery()) {
+                return rs.next();
+            }
+        }
+
+    } catch (SQLException e) {
+        System.out.println("Error al actualizar perfil: " + e.getMessage());
+        return false;
+    } finally {
+        if (con != null) {
+            try { con.close(); } catch (SQLException ignored) {}
         }
     }
+}
+
+
 }

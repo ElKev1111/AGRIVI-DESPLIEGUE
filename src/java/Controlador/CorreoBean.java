@@ -19,12 +19,15 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import org.primefaces.model.file.UploadedFile;
 import java.io.Serializable;
+import java.sql.Connection;
+import javax.mail.Multipart;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 
 @ManagedBean(name = "correoBean")
 @ViewScoped
@@ -48,155 +51,145 @@ public class CorreoBean implements Serializable {
         listaUsr = new ArrayList<>();
     }
 
-
     // ---------------- LÓGICA DE USUARIOS ----------------
     public void listarUsuarios() {
         listaUsr = new ArrayList<>();
+        String sql = "SELECT correo, nombre FROM usuario WHERE estado = 'ACTIVO'";
 
+        Connection con = null;
         try {
-            String sql = "SELECT * FROM usuario";
-            PreparedStatement ps = Conexion.conectar().prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                Usuario usr = new Usuario();
-                usr.setNombre(rs.getString("nombre"));
-                usr.setCorreo(rs.getString("correo"));
-
-                listaUsr.add(usr);
+            con = Conexion.conectar();
+            if (con == null) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "BD", "No se pudo conectar a la base de datos."));
+                return;
             }
+
+            try (PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+                    Usuario u = new Usuario();
+                    u.setCorreo(rs.getString("correo"));
+                    u.setNombre(rs.getString("nombre"));
+                    listaUsr.add(u);
+                }
+            }
+
         } catch (SQLException e) {
+            e.printStackTrace();
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error",
-                            "No se pudieron listar los usuarios para el envío de correos."));
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudieron cargar usuarios."));
+        } finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException ignored) {
+                }
+            }
         }
     }
 
     // ---------------- ENVÍO DE CORREO GENERAL ----------------
     public void enviarCorreo() {
-        // ---------------- VALIDACIONES ----------------
-        if (dest == null || dest.isEmpty()) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_WARN,
-                            "Atención",
-                            "Debe seleccionar al menos un destinatario."));
-            return;
-        }
-
-        if (asunto == null || asunto.trim().isEmpty()) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_WARN,
-                            "Atención",
-                            "Debe especificar un asunto."));
-            return;
-        }
-
-        if (contmensaje == null || contmensaje.trim().isEmpty()) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_WARN,
-                            "Atención",
-                            "Debe escribir un mensaje."));
-            return;
-        }
-
-        // --------------------------------------------------------------------
-        // ✅ ELIMINADO:
-        // final String user = "...";
-        // final String pass = "...";
-        //
-        // ✅ ELIMINADO:
-        // Properties props = new Properties();
-        // props.put("mail.smtp.auth", "true");
-        // props.put("mail.smtp.starttls.enable", "true");
-        // props.put("mail.smtp.host", "smtp.gmail.com");
-        // props.put("mail.smtp.port", "587");
-        // props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
-        //
-        // ✅ ELIMINADO:
-        // Session sesion = Session.getInstance(props, new Authenticator() {
-        //     @Override
-        //     protected PasswordAuthentication getPasswordAuthentication() {
-        //         return new PasswordAuthentication(user, pass);
-        //     }
-        // });
-        //
-        // ✅ REEMPLAZADO POR:
-        // Usar configuración dinámica por variables de entorno
-        // (en local puede ser Gmail; en Render será SendGrid u otro proveedor)
-        // --------------------------------------------------------------------
-        Session sesion = MailSessionFactory.createSession();
-        String from = MailSessionFactory.getFrom();
-
-        // Validación extra para evitar errores silenciosos si no configuraste ENV
-        if (from == null || from.trim().isEmpty()) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error de configuración",
-                            "No se encontró configuración de correo. "
-                            + "Define MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS y MAIL_FROM."));
-            return;
-        }
+        FacesContext fc = FacesContext.getCurrentInstance();
 
         try {
+            if (dest == null || dest.isEmpty()) {
+                fc.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, "Atención", "Selecciona destinatarios."));
+                return;
+            }
+            if (asunto == null || asunto.trim().isEmpty()) {
+                fc.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, "Atención", "El asunto es obligatorio."));
+                return;
+            }
+
+            // Copia segura (evita listas inmutables)
+            List<String> destinatarios = new ArrayList<>(dest);
+
+            Session sesion = MailSessionFactory.createSession();
+            if (sesion == null) {
+                fc.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Mail", "No se pudo crear la sesión de correo."));
+                return;
+            }
+
             int enviados = 0;
+            int invalidos = 0;
 
-            // Enviar UN correo por destinatario, personalizado
-            for (String correoDestino : dest) {
+            for (String correoDestino : destinatarios) {
 
-                // Obtener nombre según el correo
-                String nombreDest = obtenerNombrePorCorreo(correoDestino);
-
-                MimeMessage mensaje = new MimeMessage(sesion);
-                mensaje.setFrom(new InternetAddress(from));
-                mensaje.setRecipient(Message.RecipientType.TO, new InternetAddress(correoDestino));
-                mensaje.setSubject(asunto, "UTF-8");
-
-                // Cuerpo HTML con el nombre de la persona
-                String html = construirHtmlCorreo(nombreDest);
-
-                MimeBodyPart cuerpoHtml = new MimeBodyPart();
-                cuerpoHtml.setContent(html, "text/html; charset=UTF-8");
-
-                MimeMultipart multipart = new MimeMultipart("mixed");
-                multipart.addBodyPart(cuerpoHtml);
-
-                // Adjuntar archivo (si hay)
-                if (archivoAdjunto != null && archivoAdjunto.getSize() > 0) {
-                    MimeBodyPart adjuntoPart = crearParteAdjunto(archivoAdjunto);
-                    if (adjuntoPart != null) {
-                        multipart.addBodyPart(adjuntoPart);
-                    }
+                // Validación básica
+                if (correoDestino == null || correoDestino.trim().isEmpty()) {
+                    invalidos++;
+                    continue;
                 }
 
-                mensaje.setContent(multipart);
+                // Validación estricta del formato de email (para saltar “correos fake”)
+                try {
+                    InternetAddress ia = new InternetAddress(correoDestino, true);
+                    ia.validate();
+                } catch (AddressException ex) {
+                    invalidos++;
+                    continue;
+                }
 
-                // Enviar
-                Transport.send(mensaje);
-                enviados++;
+                try {
+                    Message mensaje = new MimeMessage(sesion);
+                    mensaje.setFrom(new InternetAddress(MailSessionFactory.getFrom()));
+
+                    mensaje.setRecipients(Message.RecipientType.TO, InternetAddress.parse(correoDestino));
+                    mensaje.setSubject(asunto);
+
+                    // Contenido HTML o texto
+                    MimeBodyPart cuerpo = new MimeBodyPart();
+                    cuerpo.setContent(contmensaje, "text/html; charset=UTF-8");
+
+                    Multipart multipart = new MimeMultipart();
+                    multipart.addBodyPart(cuerpo);
+
+                    if (archivoAdjunto != null && archivoAdjunto.getFileName() != null) {
+                        File temp = File.createTempFile("adjunto_", "_" + archivoAdjunto.getFileName());
+                        temp.deleteOnExit(); // evita basura en disco
+
+                        try (InputStream in = archivoAdjunto.getInputStream(); FileOutputStream out = new FileOutputStream(temp)) {
+                            byte[] buffer = new byte[4096];
+                            int bytesRead;
+                            while ((bytesRead = in.read(buffer)) != -1) {
+                                out.write(buffer, 0, bytesRead);
+                            }
+                        }
+
+                        MimeBodyPart adjunto = new MimeBodyPart();
+                        adjunto.attachFile(temp);
+                        multipart.addBodyPart(adjunto);
+                    }
+
+                    mensaje.setContent(multipart);
+                    Transport.send(mensaje);
+                    enviados++;
+
+                } catch (Exception mailEx) {
+                    // IMPORTANTE: NO romper el envío masivo por 1 correo malo
+                    mailEx.printStackTrace();
+                }
             }
 
-            // Limpiar campos
+            fc.addMessage(null, new FacesMessage(
+                    FacesMessage.SEVERITY_INFO,
+                    "Correos",
+                    "Enviados: " + enviados + " | Saltados inválidos: " + invalidos
+            ));
+
+            // Limpieza segura (no uses dest.clear())
+            // Limpiar campos (seguro)
             asunto = "";
             contmensaje = "";
-            dest.clear();
+            dest = new ArrayList<>();
             archivoAdjunto = null;
 
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO,
-                            "Correo enviado",
-                            "Se enviaron " + enviados + " correos correctamente."));
-
-        } catch (MessagingException | IOException e) {
+        } catch (Exception e) {
+            // Esto evita el Error500 post-envío
             e.printStackTrace();
-            String detalle = e.getMessage();
-            if (detalle == null || detalle.trim().isEmpty()) {
-                detalle = "Ocurrió un error desconocido al enviar los correos.";
-            }
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error al enviar correo",
-                            detalle));
+            fc.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Falló el envío masivo: " + e.getMessage()));
         }
     }
 
@@ -582,7 +575,7 @@ public class CorreoBean implements Serializable {
     }
 
     public void setDest(List<String> dest) {
-        this.dest = dest;
+        this.dest = (dest == null) ? new ArrayList<>() : new ArrayList<>(dest);
     }
 
     public List<Usuario> getListaUsr() {

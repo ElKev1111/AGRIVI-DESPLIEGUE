@@ -151,67 +151,116 @@ public class UsuarioBean implements Serializable {
     public String autenticar() {
         String destino = null;
 
+        String correo = (usuario.getCorreo() != null) ? usuario.getCorreo().trim() : "";
+        String passwordPlano = (usuario.getPassword() != null) ? usuario.getPassword() : "";
+        String passwordHash = CifradoAES.encriptar(passwordPlano);
+
         try (Connection con = Conexion.conectar()) {
-            String sql = "SELECT * FROM usuario WHERE correo = ? AND password = ? ";
-            PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, usuario.getCorreo());
 
-            String password = CifradoAES.encriptar(usuario.getPassword());
-            ps.setString(2, password);
+            // 1) Intento normal: correo + password en hash (tu flujo actual)
+            String sql = "SELECT * FROM usuario WHERE correo = ? AND password = ?";
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                ps.setString(1, correo);
+                ps.setString(2, passwordHash);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                this.usuario = new Usuario();
-                usuario.setId(rs.getInt("id"));
-                usuario.setNombre(rs.getString("nombre"));
-                usuario.setCorreo(rs.getString("correo"));
-                usuario.setEstado(rs.getString("estado"));
-                usuario.setCelular(rs.getString("celular"));
-                usuario.setDireccion(rs.getString("direccion"));
-                usuario.setPassword(rs.getString("password"));
-                usuario.setFotoPerfil(rs.getString("fotoPerfil"));
-                usuario.setBiografia(rs.getString("biografia"));
-
-                String rolDb = rs.getString("rol");
-                EnumRoles rol = EnumRoles.valueOf(rolDb.trim().toUpperCase(Locale.ROOT));
-                usuario.setRol(rol);
-
-                Usuario usuarioCompleto = usuarioDAO.obtenerPorId(usuario.getId());
-                if (usuarioCompleto != null) {
-                    usuario = usuarioCompleto;
-                    rol = usuario.getRol();
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return completarLogin(rs);
+                    }
                 }
-
-                if (usuario.getEstado() != null && !"ACTIVO".equalsIgnoreCase(usuario.getEstado())) {
-                    this.autenticado = false;
-                    FacesContext.getCurrentInstance().addMessage(null,
-                            new FacesMessage(FacesMessage.SEVERITY_WARN, "Aviso",
-                                    "Tu usuario está inactivo. Contacta con el administrador."));
-                    return null;
-                }
-
-                this.autenticado = true;
-                FacesContext.getCurrentInstance().getExternalContext()
-                        .getSessionMap().put("user", usuario.getNombre());
-
-                if (rol == EnumRoles.ADMINISTRADOR || rol == EnumRoles.EMPLEADO) {
-                    destino = "HomeAdmin1?faces-redirect=true";
-                } else {
-                    destino = "dashboardCliente?faces-redirect=true";
-                }
-
-            } else {
-                this.autenticado = false;
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Aviso",
-                                "Id de Usuario y/o Contraseña no válidos"));
             }
 
+            // 2) Fallback: si existe el correo pero en BD quedó la password en texto plano,
+            // la migramos a hash y lo dejamos autenticado (evita bloqueos)
+            String sqlCorreo = "SELECT * FROM usuario WHERE correo = ?";
+            try (PreparedStatement ps = con.prepareStatement(sqlCorreo)) {
+                ps.setString(1, correo);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String passBD = rs.getString("password");
+                        int id = rs.getInt("id");
+
+                        if (passBD != null && passBD.equals(passwordPlano)) {
+
+                            try (PreparedStatement psUp = con.prepareStatement(
+                                    "UPDATE usuario SET password = ? WHERE id = ?")) {
+                                psUp.setString(1, passwordHash);
+                                psUp.setInt(2, id);
+                                psUp.executeUpdate();
+                            }
+
+                            // Reconsultar ya con hash
+                            try (PreparedStatement ps2 = con.prepareStatement(sql)) {
+                                ps2.setString(1, correo);
+                                ps2.setString(2, passwordHash);
+
+                                try (ResultSet rs2 = ps2.executeQuery()) {
+                                    if (rs2.next()) {
+                                        return completarLogin(rs2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            this.autenticado = false;
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Aviso",
+                            "Id de Usuario y/o Contraseña no válidos"));
+
         } catch (SQLException e) {
+            this.autenticado = false;
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_FATAL, "Error",
                             "Error en Conexión a Base de Datos"));
+        }
+
+        return destino;
+    }
+
+    private String completarLogin(ResultSet rs) throws SQLException {
+        String destino = null;
+
+        this.usuario = new Usuario();
+        usuario.setId(rs.getInt("id"));
+        usuario.setNombre(rs.getString("nombre"));
+        usuario.setCorreo(rs.getString("correo"));
+        usuario.setEstado(rs.getString("estado"));
+        usuario.setCelular(rs.getString("celular"));
+        usuario.setDireccion(rs.getString("direccion"));
+        usuario.setPassword(rs.getString("password"));
+        usuario.setFotoPerfil(rs.getString("fotoPerfil"));
+        usuario.setBiografia(rs.getString("biografia"));
+
+        String rolDb = rs.getString("rol");
+        EnumRoles rol = EnumRoles.valueOf(rolDb.trim().toUpperCase(Locale.ROOT));
+        usuario.setRol(rol);
+
+        Usuario usuarioCompleto = usuarioDAO.obtenerPorId(usuario.getId());
+        if (usuarioCompleto != null) {
+            usuario = usuarioCompleto;
+            rol = usuario.getRol();
+        }
+
+        if (usuario.getEstado() != null && !"ACTIVO".equalsIgnoreCase(usuario.getEstado())) {
+            this.autenticado = false;
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Aviso",
+                            "Tu usuario está inactivo. Contacta con el administrador."));
+            return null;
+        }
+
+        this.autenticado = true;
+        FacesContext.getCurrentInstance().getExternalContext()
+                .getSessionMap().put("user", usuario.getNombre());
+
+        if (rol == EnumRoles.ADMINISTRADOR || rol == EnumRoles.EMPLEADO) {
+            destino = "HomeAdmin1?faces-redirect=true";
+        } else {
+            destino = "dashboardCliente?faces-redirect=true";
         }
 
         return destino;
@@ -267,7 +316,11 @@ public class UsuarioBean implements Serializable {
         FacesContext context = FacesContext.getCurrentInstance();
 
         try {
-            // 0) Procesar cambio de contraseña si el usuario llenó los campos
+            // 0) Saber si el usuario INTENTÓ cambiar la contraseña (si llenó alguno)
+            boolean quiereCambiarPassword
+                    = !isBlank(passwordActual) || !isBlank(nuevaPassword) || !isBlank(confirmarNuevaPassword);
+
+// 1) Procesar cambio de contraseña si corresponde
             if (!procesarCambioContrasena(context)) {
                 return null;
             }
@@ -296,7 +349,7 @@ public class UsuarioBean implements Serializable {
             }
 
             // 2) Actualizar datos en BD (incluye password)
-            boolean actualizado = usuarioDAO.actualizarPerfil(usuario);
+            boolean actualizado = usuarioDAO.actualizarPerfil(usuario, quiereCambiarPassword);
             if (actualizado) {
                 context.addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_INFO,
@@ -327,17 +380,17 @@ public class UsuarioBean implements Serializable {
 
     private boolean procesarCambioContrasena(FacesContext context) {
 
-        boolean algunCampo
-                = !isBlank(passwordActual)
-                || !isBlank(nuevaPassword)
-                || !isBlank(confirmarNuevaPassword);
+        // ✅ SOLO intentamos cambiar contraseña si el usuario escribió la NUEVA o la CONFIRMACIÓN
+        boolean intentoCambio = !isBlank(nuevaPassword) || !isBlank(confirmarNuevaPassword);
 
-        // Si no quiere cambiar contraseña, no hacemos nada.
-        if (!algunCampo) {
+        // Si no está intentando cambiar contraseña, no bloqueamos el update del perfil.
+        if (!intentoCambio) {
+            // Limpieza segura (evita "campos pegados" por sesión o autocompletado)
+            limpiarCamposPassword();
             return true;
         }
 
-        // Si empezó, debe completar los 3
+        // Si empezó el cambio, debe completar los 3
         if (isBlank(passwordActual) || isBlank(nuevaPassword) || isBlank(confirmarNuevaPassword)) {
             context.addMessage(null, new FacesMessage(
                     FacesMessage.SEVERITY_WARN,
@@ -346,7 +399,7 @@ public class UsuarioBean implements Serializable {
             return false;
         }
 
-        // Validar contraseña actual (comparando hash MD5)
+        // Validar contraseña actual
         String hashIngresado = CifradoAES.encriptar(passwordActual);
         if (usuario.getPassword() == null || !hashIngresado.equals(usuario.getPassword())) {
             context.addMessage(null, new FacesMessage(
@@ -553,9 +606,6 @@ public class UsuarioBean implements Serializable {
     public void enviarNuevaContrasena() {
         FacesContext context = FacesContext.getCurrentInstance();
 
-        System.out.println("🟦 [RECUPERACION] Click en Enviar Nueva Contraseña");
-        System.out.println("🟦 [RECUPERACION] Correo ingresado: " + correoRecuperacion);
-
         if (correoRecuperacion == null || correoRecuperacion.trim().isEmpty()) {
             context.addMessage(null, new FacesMessage(
                     FacesMessage.SEVERITY_WARN,
@@ -567,16 +617,37 @@ public class UsuarioBean implements Serializable {
 
         String correoIngresado = correoRecuperacion.trim();
 
-        try (Connection con = Conexion.conectar()) {
+        Connection con = null;
 
-            String sql = "SELECT id, nombre, correo FROM usuario WHERE correo = ?";
+        try {
+            con = Conexion.conectar();
+            if (con == null) {
+                context.addMessage(null, new FacesMessage(
+                        FacesMessage.SEVERITY_ERROR,
+                        "Error",
+                        "No se pudo conectar a la base de datos."
+                ));
+                return;
+            }
+
+            con.setAutoCommit(false);
+
+            // 1) Buscar usuario por correo (case-insensitive) - tomar el más reciente
+            String sql = "SELECT id, nombre, correo FROM usuario "
+                    + "WHERE LOWER(correo) = LOWER(?) "
+                    + "ORDER BY id DESC "
+                    + "LIMIT 1";
+
+            int idUsuario;
+            String nombreUsuario;
+            String correoBD;
+
             try (PreparedStatement ps = con.prepareStatement(sql)) {
                 ps.setString(1, correoIngresado);
 
                 try (ResultSet rs = ps.executeQuery()) {
-
                     if (!rs.next()) {
-                        System.out.println("🟨 [RECUPERACION] Correo NO encontrado en BD: " + correoIngresado);
+                        con.rollback();
                         context.addMessage(null, new FacesMessage(
                                 FacesMessage.SEVERITY_WARN,
                                 "Correo no encontrado",
@@ -585,68 +656,82 @@ public class UsuarioBean implements Serializable {
                         return;
                     }
 
-                    int idUsuario = rs.getInt("id");
-                    String nombreUsuario = rs.getString("nombre");
-                    String correoBD = rs.getString("correo");
-
-                    System.out.println("🟩 [RECUPERACION] Usuario encontrado: id=" + idUsuario
-                            + ", nombre=" + nombreUsuario + ", correoBD=" + correoBD);
-
-                    // 1) Generar nueva contraseña temporal
-                    String nuevaPasswordPlano = generarContrasenaTemporal(8);
-
-                    // 2) Encriptar igual que en tu flujo de login
-                    String nuevaPasswordEncriptada = CifradoAES.encriptar(nuevaPasswordPlano);
-
-                    // 3) Actualizar en BD
-                    String sqlUpdate = "UPDATE usuario SET password = ? WHERE id = ?";
-                    try (PreparedStatement ps2 = con.prepareStatement(sqlUpdate)) {
-                        ps2.setString(1, nuevaPasswordEncriptada);
-                        ps2.setInt(2, idUsuario);
-
-                        int filas = ps2.executeUpdate();
-                        System.out.println("🟩 [RECUPERACION] Filas actualizadas: " + filas);
-
-                        if (filas == 0) {
-                            context.addMessage(null, new FacesMessage(
-                                    FacesMessage.SEVERITY_ERROR,
-                                    "Error",
-                                    "No se pudo actualizar la contraseña en la base de datos."
-                            ));
-                            return;
-                        }
-                    }
-
-                    System.out.println("🟩 [RECUPERACION] Password actualizada en BD para id=" + idUsuario);
-
-                    // 4) Enviar correo con contraseña temporal en texto plano
-                    boolean enviado = enviarCorreoRecuperacion(correoBD, nombreUsuario, nuevaPasswordPlano);
-                    System.out.println("🟦 [RECUPERACION] Resultado envío correo: " + enviado);
-
-                    if (enviado) {
-                        context.addMessage(null, new FacesMessage(
-                                FacesMessage.SEVERITY_INFO,
-                                "Correo enviado",
-                                "Se ha enviado una nueva contraseña temporal a tu correo."
-                        ));
-                        correoRecuperacion = null;
-                    } else {
-                        context.addMessage(null, new FacesMessage(
-                                FacesMessage.SEVERITY_ERROR,
-                                "Error",
-                                "No se pudo enviar el correo. Intenta más tarde o contacta al administrador."
-                        ));
-                    }
+                    idUsuario = rs.getInt("id");
+                    nombreUsuario = rs.getString("nombre");
+                    correoBD = rs.getString("correo");
                 }
             }
 
+            // 2) Generar y encriptar nueva contraseña
+            String nuevaPasswordPlano = generarContrasenaTemporal(8);
+            String nuevaPasswordEncriptada = CifradoAES.encriptar(nuevaPasswordPlano);
+
+            // 3) Actualizar password por correo (si hay duplicados, los actualiza todos)
+            String sqlUpdate = "UPDATE usuario SET password = ?, fecha_actualizacion = NOW() "
+                    + "WHERE LOWER(correo) = LOWER(?)";
+
+            int filas;
+            try (PreparedStatement ps2 = con.prepareStatement(sqlUpdate)) {
+                ps2.setString(1, nuevaPasswordEncriptada);
+                ps2.setString(2, correoIngresado);
+                filas = ps2.executeUpdate();
+            }
+
+            if (filas <= 0) {
+                con.rollback();
+                context.addMessage(null, new FacesMessage(
+                        FacesMessage.SEVERITY_ERROR,
+                        "Error",
+                        "No se pudo actualizar la contraseña en la base de datos."
+                ));
+                return;
+            }
+
+            // 4) Enviar correo. Si falla, rollback (no dejamos el usuario “cambiado sin saber”)
+            boolean enviado = enviarCorreoRecuperacion(correoBD, nombreUsuario, nuevaPasswordPlano);
+
+            if (!enviado) {
+                con.rollback();
+                context.addMessage(null, new FacesMessage(
+                        FacesMessage.SEVERITY_ERROR,
+                        "Error",
+                        "No se pudo enviar el correo. Intenta más tarde."
+                ));
+                return;
+            }
+
+            con.commit();
+
+            context.addMessage(null, new FacesMessage(
+                    FacesMessage.SEVERITY_INFO,
+                    "Correo enviado",
+                    "Se ha enviado una nueva contraseña temporal a tu correo."
+            ));
+            correoRecuperacion = null;
+
         } catch (Exception e) {
+            try {
+                if (con != null) {
+                    con.rollback();
+                }
+            } catch (SQLException ignored) {
+            }
+
             e.printStackTrace();
             context.addMessage(null, new FacesMessage(
                     FacesMessage.SEVERITY_ERROR,
                     "Error interno",
                     "Ocurrió un error al procesar la recuperación de contraseña."
             ));
+
+        } finally {
+            try {
+                if (con != null) {
+                    con.setAutoCommit(true);
+                    con.close();
+                }
+            } catch (SQLException ignored) {
+            }
         }
     }
 
